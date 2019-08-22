@@ -51,6 +51,11 @@ b′ = copy(b)
 
 merge_into!(a′, b′)
 
+"""
+    merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
+
+Collapse the 
+"""
 function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
     a_i = firstindex(a)
     a_end = lastindex(a) + 1
@@ -77,19 +82,19 @@ function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
         
     end
     
-    @info "Shrink b to size of remaining contents"
+    @debug "Shrink b to size of remaining contents"
     # Shrink `b` to the size of the remaining contents.
     
     resize!(b, b_i2 - 1)
     
     # Expand `a` to allow the insertion of unique values in `b`.
-    @info "Expand a to allow insertion of unique values in b"
+    @debug "Expand a to allow insertion of unique values in b"
     
     oldsize = length(a)
     resize!(a, oldsize + length(b))
     r_a = oldsize
     
-    @info "Expanded a" a b
+    @debug "Expanded a" a b
     
     # Merge-sort from the bottom into `a`.
     wr_a = lastindex(a)
@@ -97,7 +102,7 @@ function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
     
     r_b = lastindex(b)
     r_end_b = firstindex(b)
-    @info "Merge sort from the bottom into `a`"
+    @debug "Merge sort from the bottom into `a`"
     while wr_a >= rend_a
         if r_b >= r_end_b && (r_a < rend_a || b[r_b] > a[r_a])
             a[wr_a] = b[r_b]
@@ -108,7 +113,6 @@ function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
         end
         wr_a = wr_a - 1
     end
-    @info "Done"
 end
 
 function build_freq_list(::Type{DNAMer{K}}, sbuf::SequenceBuffer{PairedReads}, range::UnitRange{Int}, batch_size::Int = 1000000) where {K}
@@ -130,12 +134,12 @@ function build_freq_list(::Type{DNAMer{K}}, sbuf::SequenceBuffer{PairedReads}, r
         @info string("Collected a chunk of ", batch_size, " mers")
         # Sort and collapse the batch into a MerList
         sort!(batch_mers)
-        _collapse_into_freqs!(chunk_mers, chunk_freqs)
+        collapse_into_freqs!(chunk_mers, chunk_freqs)
         
     end
 end
 
-function _collapse_into_freqs!(mers::Vector{DNAMer{K}}, result::Vector{MerFreq{K}}) where {K}
+function collapse_into_freqs!(mers::Vector{DNAMer{K}}, result::Vector{MerFreq{K}}) where {K}
     wi = 1
     ri = 1
     stop = lastindex(mers) + 1
