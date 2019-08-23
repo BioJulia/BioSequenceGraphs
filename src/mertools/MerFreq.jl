@@ -1,19 +1,22 @@
-struct MerFreq{K}
-    mer::DNAMer{K}
+
+"""
+    Kmer frequency type
+"""
+struct MerFreq{M<:AbstractMer}
+    mer::M
     count::UInt8
 end
 
-Base.isless(x::MerFreq{K}, y::MerFreq{K}) where K = x.mer < y.mer
-Base.:(>)(x::MerFreq{K}, y::MerFreq{K}) where K = x.mer > y.mer
-Base.:(==)(x::MerFreq{K}, y::MerFreq{K}) where K = x.mer == y.mer
+const DNAMerFreq{K} = MerFreq{DNAMer{K}}
+const RNAMerFreq{K} = MerFreq{RNAMer{K}}
 
-function merge(x::MerFreq{K}, y::MerFreq{K}) where K
+Base.isless(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer < y.mer
+Base.:(>)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer > y.mer
+Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer == y.mer
+
+function merge(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer}
     newcount = min(UInt16(x.count) + UInt16(y.count), typemax(x.count))
-    return MerFreq{K}(x.mer, newcount)
-end
-
-struct MerFreqList{K}
-    kmers::Vector{MerFreq{K}}
+    return MerFreq{M}(x.mer, newcount)
 end
 
 #=
@@ -30,7 +33,7 @@ push!(v, mer"AGGT")
 push!(v, mer"AGGT")
 push!(v, mer"AGGT")
 sort!(v)
-a = collapse_into_freqs!(v, MerFreq{4}[])
+a = collapse_into_freqs!(v, DNAMerFreq{4}[])
 a′ = copy(a)
 
 v2 = DNAMer{4}[]
@@ -46,7 +49,7 @@ push!(v2, mer"ACGT")
 push!(v2, mer"AAGT")
 push!(v2, mer"AAGT")
 sort!(v2)
-b = collapse_into_freqs!(v2, MerFreq{4}[])
+b = collapse_into_freqs!(v2, DNAMerFreq{4}[])
 b′ = copy(b)
 
 merge_into!(a′, b′)
@@ -57,18 +60,17 @@ merge_into!(z, a′)
 =#
 
 """
-    merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
+    merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
 
 Collapse the 
 """
-function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
+function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
     a_i = firstindex(a)
     a_end = lastindex(a) + 1
     b_i = b_i2 = firstindex(b)
     b_end = lastindex(b) + 1
     
     # Merge, accumulating counts on `a`.
-    @debug "Merging, accumulating counts on a"
     while b_i < b_end
         while a_i < a_end && a[a_i] < b[b_i]
             a_i = a_i + 1
@@ -86,28 +88,19 @@ function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
         end
         
     end
-    
-    @debug "Shrink b to size of remaining contents"
     # Shrink `b` to the size of the remaining contents.
-    
     resize!(b, b_i2 - 1)
     
     # Expand `a` to allow the insertion of unique values in `b`.
-    @debug "Expand a to allow insertion of unique values in b"
-    
     oldsize = length(a)
     resize!(a, oldsize + length(b))
     r_a = oldsize
     
-    @debug "Expanded a" a b
-    
     # Merge-sort from the bottom into `a`.
     wr_a = lastindex(a)
     rend_a = firstindex(a)
-    
     r_b = lastindex(b)
     r_end_b = firstindex(b)
-    @debug "Merge sort from the bottom into `a`"
     while wr_a >= rend_a
         if r_b >= r_end_b && (r_a < rend_a || b[r_b] > a[r_a])
             a[wr_a] = b[r_b]
@@ -122,33 +115,7 @@ function merge_into!(a::Vector{MerFreq{K}}, b::Vector{MerFreq{K}}) where {K}
     return a
 end
 
-function build_freq_list(::Type{DNAMer{K}}, sbuf::SequenceBuffer{PairedReads}, range::UnitRange{Int}, batch_size::Int = 1000000) where {K}
-    chunk_mers = Vector{DNAMer{K}}()
-    chunk_freqs = Vector{MerFreq{K}}()
-    sizehint!(batch_mers, batch_size)
-    output = Vector{MerFreq{K}}()
-    
-    read = first(range)
-    lastread = last(range)
-    read_sequence = LongDNASeq()
-    
-    while read <= lastread
-        while read <= lastread && length(batch_mers) < batch_size
-            # Collect mers into a batch
-            for mer in each(DNAMer{K}, load_sequence!(bufds, read, read_sequence))
-                push!(batch_mers, canonical(mer))
-            end
-        end
-        @info string("Collected a chunk of ", batch_size, " mers")
-        # Sort and collapse the batch into a MerList
-        sort!(batch_mers)
-        collapse_into_freqs!(chunk_mers, chunk_freqs)
-        merge_into!(output, chunk_freqs)
-    end
-    return output
-end
-
-function collapse_into_freqs!(mers::Vector{DNAMer{K}}, result::Vector{MerFreq{K}}) where {K}
+function collapse_into_freqs!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
     wi = 1
     ri = 1
     stop = lastindex(mers) + 1
@@ -158,9 +125,12 @@ function collapse_into_freqs!(mers::Vector{DNAMer{K}}, result::Vector{MerFreq{K}
         while (ri += 1) < stop && mers[ri] == mers[wi]
             ci = ci + one(UInt16)
         end
-        push!(result, MerFreq{K}(mers[wi], ci))
+        push!(result, MerFreq{M}(mers[wi], ci))
         wi = ri
     end
     return result
 end
 
+function collapse_into_freqs(mers::Vector{M}) where {M<:AbstractMer}
+    return collapse_into_freqs!(mers, Vector{MerFreq{M}}())
+end
