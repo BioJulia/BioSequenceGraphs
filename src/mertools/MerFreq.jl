@@ -9,7 +9,7 @@ end
 
 @inline mer(x::MerFreq{M}) where {M<:AbstractMer} = x.mer
 @inline freq(x::MerFreq{M}) where {M<:AbstractMer} = x.count
-@inline freq(::Type{R}, x::MerFreq{M}) where {I<:Real,M<:AbstractMer} = convert(R, freq(x))
+@inline freq(::Type{R}, x::MerFreq{M}) where {R<:Real,M<:AbstractMer} = convert(R, freq(x))
 
 const DNAMerFreq{K} = MerFreq{DNAMer{K}}
 const RNAMerFreq{K} = MerFreq{RNAMer{K}}
