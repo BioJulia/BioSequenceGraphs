@@ -9,16 +9,17 @@ end
 
 @inline mer(x::MerFreq{M}) where {M<:AbstractMer} = x.mer
 @inline freq(x::MerFreq{M}) where {M<:AbstractMer} = x.count
+@inline freq(::Type{R}, x::MerFreq{M}) where {I<:Real,M<:AbstractMer} = convert(R, freq(x))
 
 const DNAMerFreq{K} = MerFreq{DNAMer{K}}
 const RNAMerFreq{K} = MerFreq{RNAMer{K}}
 
-Base.isless(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer < y.mer
-Base.:(>)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer > y.mer
-Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = x.mer == y.mer
+Base.isless(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) < mer(y)
+Base.:(>)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) > mer(y)
+Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) == mer(y)
 
 function merge(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer}
-    newcount = min(UInt16(x.count) + UInt16(y.count), typemax(x.count))
+    newcount = min(freq(UInt16, x) + freq(UInt16, y), typemax(x.count))
     return MerFreq{M}(x.mer, newcount)
 end
 
@@ -27,11 +28,11 @@ function Base.show(io::IO, mfreq::MerFreq{<:AbstractMer})
 end
 
 """
-    merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
+    merge_into_sorted!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
 
 Collapse the 
 """
-function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
+function merge_into_sorted!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
     a_i = firstindex(a)
     a_end = lastindex(a) + 1
     b_i = b_i2 = firstindex(b)
@@ -80,6 +81,12 @@ function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:Abs
     end
     empty!(b)
     return a
+end
+
+function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
+    sort!(a)
+    sort!(b)
+    return merge_into_sorted!(a, b)
 end
 
 function collapse_into_freqs_sorted!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
