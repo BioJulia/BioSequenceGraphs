@@ -7,6 +7,9 @@ struct MerFreq{M<:AbstractMer}
     count::UInt8
 end
 
+@inline mer(x::MerFreq{M}) where {M<:AbstractMer} = x.mer
+@inline freq(x::MerFreq{M}) where {M<:AbstractMer} = x.count
+
 const DNAMerFreq{K} = MerFreq{DNAMer{K}}
 const RNAMerFreq{K} = MerFreq{RNAMer{K}}
 
@@ -19,45 +22,9 @@ function merge(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer}
     return MerFreq{M}(x.mer, newcount)
 end
 
-#=
-v = DNAMer{4}[]
-push!(v, mer"AAAA")
-push!(v, mer"AAAA")
-push!(v, mer"AAAA")
-push!(v, mer"ATAG")
-push!(v, mer"GGGG")
-push!(v, mer"GGGG")
-push!(v, mer"GGGT")
-push!(v, mer"AGGT")
-push!(v, mer"AGGT")
-push!(v, mer"AGGT")
-push!(v, mer"AGGT")
-sort!(v)
-a = collapse_into_freqs!(v, DNAMerFreq{4}[])
-a′ = copy(a)
-
-v2 = DNAMer{4}[]
-push!(v2, mer"AAAA")
-push!(v2, mer"AAAA")
-push!(v2, mer"AAAA")
-push!(v2, mer"ATAG")
-push!(v2, mer"GGGG")
-push!(v2, mer"GGGG")
-push!(v2, mer"GGGT")
-push!(v2, mer"AGGT")
-push!(v2, mer"ACGT")
-push!(v2, mer"AAGT")
-push!(v2, mer"AAGT")
-sort!(v2)
-b = collapse_into_freqs!(v2, DNAMerFreq{4}[])
-b′ = copy(b)
-
-merge_into!(a′, b′)
-
-z = MerFreq{4}[]
-
-merge_into!(z, a′)
-=#
+function Base.show(io::IO, mfreq::MerFreq{<:AbstractMer})
+    print(io, mer(mfreq), " occurs ", freq(mfreq), " times")
+end
 
 """
     merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:AbstractMer}
@@ -115,7 +82,7 @@ function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:Abs
     return a
 end
 
-function collapse_into_freqs!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
+function collapse_into_freqs_sorted!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
     wi = 1
     ri = 1
     stop = lastindex(mers) + 1
@@ -129,6 +96,15 @@ function collapse_into_freqs!(mers::Vector{M}, result::Vector{MerFreq{M}}) where
         wi = ri
     end
     return result
+end
+
+function collapse_into_freqs!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
+    sort!(mers)
+    return collapse_into_freqs_sorted!(mers, result)
+end
+
+function collapse_into_freqs_sorted(mers::Vector{M}) where {M<:AbstractMer}
+    return collapse_into_freqs_sorted!(mers, Vector{MerFreq{M}}())
 end
 
 function collapse_into_freqs(mers::Vector{M}) where {M<:AbstractMer}

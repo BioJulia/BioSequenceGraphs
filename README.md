@@ -16,7 +16,7 @@ genotypes/haplotypes and variation.
 
 ## Installation
 
-BioSequenceGraphs is currently in **alpha** development.
+BioSequenceGraphs is currently in **pre-alpha** development.
 But you can clone BioSequenceGraphs from the Julia REPL:
 
 ```julia
