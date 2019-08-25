@@ -19,20 +19,10 @@ const RNAMerFreq{K} = MerFreq{RNAMer{K}}
 
 Base.isless(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) < mer(y)
 Base.:(>)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) > mer(y)
-Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) == mer(y)
+#Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) == mer(y)
 
 function merge(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer}
-    #newcount = min(freq(UInt16, x) + freq(UInt16, y), typemax(x.count))
-    #return MerFreq{M}(x.mer, newcount)
-    if x.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna && y.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna
-        show(x)
-        show(y)
-    end
-    inc = MerFreq{M}(x.mer, UInt16(x.count) + UInt16(y.count))
-    if x.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna && y.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna
-        show(inc)
-    end
-    return inc
+    return MerFreq{M}(x.mer, UInt16(x.count) + UInt16(y.count))
 end
 
 function Base.show(io::IO, mfreq::MerFreq{<:AbstractMer})
@@ -55,7 +45,7 @@ function merge_into_sorted!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where 
         while a_i < a_end && a[a_i] < b[b_i]
             a_i = a_i + 1
         end
-        if a_i < a_end && a[a_i] == b[b_i]
+        if a_i < a_end && mer(a[a_i]) == mer(b[b_i])
             # Combine entries
             a[a_i] = merge(a[a_i], b[b_i])
             a_i = a_i + 1
@@ -106,10 +96,9 @@ function collapse_sorted!(freqs::Vector{MerFreq{M}}) where {M<:AbstractMer}
     ri = 1
     pi = 1
     stop = lastindex(freqs) + 1
-    #empty!(result)
     @inbounds while ri < stop
         ci = one(UInt16)
-        while (ri += 1) < stop && freqs[ri] == freqs[pi]
+        while (ri += 1) < stop && mer(freqs[ri]) == mer(freqs[pi])
             ci = ci + one(UInt16)
         end
         freqs[wi] = MerFreq{M}(mer(freqs[pi]), ci)
