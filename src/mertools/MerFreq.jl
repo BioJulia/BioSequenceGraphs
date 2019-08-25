@@ -5,6 +5,9 @@
 struct MerFreq{M<:AbstractMer}
     mer::M
     count::UInt8
+    function MerFreq{M}(mer::M, count::Integer) where {M<:AbstractMer}
+        return new(mer, convert(UInt8, min(typemax(UInt8), count)))
+    end
 end
 
 @inline mer(x::MerFreq{M}) where {M<:AbstractMer} = x.mer
@@ -19,8 +22,17 @@ Base.:(>)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) > mer(y)
 Base.:(==)(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer} = mer(x) == mer(y)
 
 function merge(x::MerFreq{M}, y::MerFreq{M}) where {M<:AbstractMer}
-    newcount = min(freq(UInt16, x) + freq(UInt16, y), typemax(x.count))
-    return MerFreq{M}(x.mer, newcount)
+    #newcount = min(freq(UInt16, x) + freq(UInt16, y), typemax(x.count))
+    #return MerFreq{M}(x.mer, newcount)
+    if x.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna && y.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna
+        show(x)
+        show(y)
+    end
+    inc = MerFreq{M}(x.mer, UInt16(x.count) + UInt16(y.count))
+    if x.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna && y.mer == mer"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"dna
+        show(inc)
+    end
+    return inc
 end
 
 function Base.show(io::IO, mfreq::MerFreq{<:AbstractMer})
@@ -39,7 +51,7 @@ function merge_into_sorted!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where 
     b_end = lastindex(b) + 1
     
     # Merge, accumulating counts on `a`.
-    while b_i < b_end
+    @inbounds while b_i < b_end
         while a_i < a_end && a[a_i] < b[b_i]
             a_i = a_i + 1
         end
@@ -69,7 +81,7 @@ function merge_into_sorted!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where 
     rend_a = firstindex(a)
     r_b = lastindex(b)
     r_end_b = firstindex(b)
-    while wr_a >= rend_a
+    @inbounds while wr_a >= rend_a
         if r_b >= r_end_b && (r_a < rend_a || b[r_b] > a[r_a])
             a[wr_a] = b[r_b]
             r_b = r_b - 1
@@ -88,6 +100,27 @@ function merge_into!(a::Vector{MerFreq{M}}, b::Vector{MerFreq{M}}) where {M<:Abs
     sort!(b)
     return merge_into_sorted!(a, b)
 end
+
+function collapse_sorted!(freqs::Vector{MerFreq{M}}) where {M<:AbstractMer}
+    wi = 1
+    ri = 1
+    pi = 1
+    stop = lastindex(freqs) + 1
+    #empty!(result)
+    @inbounds while ri < stop
+        ci = one(UInt16)
+        while (ri += 1) < stop && freqs[ri] == freqs[pi]
+            ci = ci + one(UInt16)
+        end
+        freqs[wi] = MerFreq{M}(mer(freqs[pi]), ci)
+        pi = ri
+        wi = wi + 1
+    end
+    resize!(freqs, wi - 1)
+    return freqs
+end
+
+collapse!(freqs::Vector{MerFreq{M}}) where {M<:AbstractMer} = collapse_sorted!(sort!(freqs))
 
 function collapse_into_freqs_sorted!(mers::Vector{M}, result::Vector{MerFreq{M}}) where {M<:AbstractMer}
     wi = 1
@@ -116,4 +149,43 @@ end
 
 function collapse_into_freqs(mers::Vector{M}) where {M<:AbstractMer}
     return collapse_into_freqs!(mers, Vector{MerFreq{M}}())
+end
+
+struct MerFreqHist
+    data::Vector{UInt64}
+    min::UInt8
+end
+
+function Base.summary(io::IO, hist::MerFreqHist)
+    print(io, "Frequency histogram of motifs appearing more than ", hist.min, "times")
+end
+
+function hist(freqs::Vector{MerFreq{M}}, min_count::Integer = 0) where {M<:AbstractMer}
+    hist = zeros(UInt64, 256)
+    for x in freqs
+        f = freq(x)
+        if f ≥ min_count
+            old = hist[f]
+            hist[f] = old + 1
+        end
+    end
+    return MerFreqHist(hist, convert(UInt8, min_count))
+end
+
+function hist!(freqs::Vector{MerFreq{M}}, min_count::Integer = 0) where {M<:AbstractMer}
+    hist = zeros(UInt64, 256)
+    wi = firstindex(freqs)
+    used = 0
+    for x in freqs
+        f = freq(x)
+        if f ≥ min_count
+            old = hist[f]
+            hist[f] = old + 1
+            freqs[wi] = x
+            wi = wi + 1
+            used = used + 1
+        end
+        resize!(freqs, used)
+    end
+    return MerFreqHist(hist, convert(UInt8, min_count))
 end
