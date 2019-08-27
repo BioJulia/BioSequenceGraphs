@@ -13,13 +13,28 @@ function WorkSpace()
                      Vector{LinkedReads}())
 end
 
+"""
+    paired_reads(ws::WorkSpace, id::String)
+
+Get a reference to the `PairedReads` in the workspace that has the name
+specified by `nm`.
+"""
+function paired_reads(ws::WorkSpace, nm::String)
+    for ds in ws.paired_reads_datastores
+        if name(ds) == nm
+            return ds
+        end
+    end
+    error(string("WorkSpace has no paired read datastore called ", nm))
+end
+
 function add_paired_reads!(ws::WorkSpace, reads::PairedReads)
     push!(ws.paired_reads_datastores, reads)
     return ws
 end
 
-function add_paired_reads!(ws::WorkSpace, file::String)
-    reads = open(PairedReads, file)
+function add_paired_reads!(ws::WorkSpace, file::String, name::Union{String,Nothing} = nothing)
+    reads = open(PairedReads, file, name)
     add_paired_reads!(ws, reads)
     return ws
 end
