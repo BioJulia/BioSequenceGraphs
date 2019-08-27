@@ -245,12 +245,12 @@ function _dbg!(sg::GRAPH_TYPE, ds::PairedReads, ::Type{M}, min_freq::UInt8) wher
     return _dbg!(sg, merlist)
 end
 
-function _dbg!(sg::GRAPH_TYPE, kmerlist::Vector{DNAMer{K}}) where {K}
-    str = string("onstructing compressed de-bruijn graph from ", length(kmerlist), ' ', K, "-mers")
+function _dbg!(sg::GRAPH_TYPE, kmerlist::Vector{M}) where {M<:AbstractMer}
+    str = string("onstructing compressed de-bruijn graph from ", length(kmerlist), ' ', BioSequences.ksize(M), "-mers")
     @info string('C', str)
     build_unitigs_from_sorted_kmers!(sg, kmerlist)
     if n_nodes(sg) > 1
-        connect_unitigs_by_overlaps!(sg, DNAMer{K})
+        connect_unitigs_by_overlaps!(sg, M)
     end
     @info string("Done c", str)
     return sg

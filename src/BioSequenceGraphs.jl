@@ -20,11 +20,14 @@ export
     
     # BioSequences
     BioSequence,
+    LongSequence,
     AbstractMer,
     Mer,
     BigMer,
     DNAMer,
     DNAKmer,
+    BigDNAMer,
+    BigDNAKmer,
     
 
     ###

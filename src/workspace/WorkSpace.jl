@@ -4,8 +4,10 @@ mutable struct WorkSpace
     paired_reads_datastores::Vector{PairedReads}
     long_reads_datastores::Vector{LongReads}
     linked_reads_datastores::Vector{LinkedReads}
+    #mer_count_stores::Vector{MerCounts}
 end
 
+"Create an empty workspace"
 function WorkSpace()
     return WorkSpace(SequenceDistanceGraph{LongDNASeq}(),
                      Vector{PairedReads}(),
