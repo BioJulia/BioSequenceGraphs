@@ -12,3 +12,9 @@ makedocs(
     ],
     
 )
+
+deploydocs(
+    repo = "github.com/BioJulia/BioSequenceGraphs.jl.git",
+    deps = nothing,
+    make = nothing
+)
