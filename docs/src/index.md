@@ -1,12 +1,12 @@
 # GenomeGraphs
 
+_A graph based genomics framework for the julia/BioJulia ecosystem._
+
 [![Latest release](https://img.shields.io/github/release/BioJulia/GenomeGraphs.svg)](https://github.com/BioJulia/GenomeGraphs/releases/latest)
 [![MIT license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/BioJulia/GenomeGraphs.jl/blob/master/LICENSE) 
 [![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://biojulia.github.io/GenomeGraphs/stable)
-[![Pkg Status](http://www.repostatus.org/badges/latest/wip.svg)](http://www.repostatus.org/#wip)
+[![Pkg Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Chat](https://img.shields.io/gitter/room/BioJulia/GenomeGraphs.svg)](https://gitter.im/BioJulia/GenomeGraphs)
-
-_A graph based genomics framework for the julia/BioJulia ecosystem_
 
 ## Introduction
 
