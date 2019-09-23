@@ -70,3 +70,6 @@ and to create processing methods for assembly or downstream analyses.
 - Workspaces binding a genome graph, mapped sequences, kmer counts, and annotation.
 - De-novo genome assembly utilities:
   - de-Bruijn graph construction, with tip-clipping & bubble-popping.
+
+See the Guide section of the manual for a tutorial explaining how to get started
+using GenomeGraphs.
