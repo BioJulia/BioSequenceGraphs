@@ -42,14 +42,14 @@ do any exploration or analysis. There are a few ways to get your first graph:
 1. Construct a de-Bruijn graph from raw sequencing reads.
 2. Load a graph (such as produced from another assembler) from a GFAv1 file
 
-### Constructing a de-Bruijn graph
+## Constructing a de-Bruijn graph
 
 Let's see how to do option number 1, and construct a de-Bruijn graph from
 raw sequencing reads. This can be achieved with a few simple steps:
 
 1. Prepare the sequencing reads.
 
-#### Preparing the sequencing reads
+### Preparing the sequencing reads
 
 Let's prepare the sequencing reads.
 
@@ -69,7 +69,7 @@ convenience.
 
 Anyway, let's build our first paired end reads datastore!
 
-```@example
+```@example dbgeg
 using GenomeGraphs
 
 fwq = open(FASTQ.Reader, "test/ecoli_pe_R1.fastq")
@@ -95,9 +95,22 @@ Long Mate Pairs.
 
 Now the datastore is created, it can be added to a workspace.
 
-```@example
+```@example dbgeg
 ws = WorkSpace()
 add_paired_reads!(ws, ds)
 ```
 
-#### 
+### Run the `dbg` process
+
+GenomeGraphs comes with some very high-level methods in it's API, that we like
+to call *processes*. The perform some critical and common task as part of a
+larger workflow. Examples include constructing a de-Bruijn graph from sequencing
+reads, mapping reads to a graph, kmer counting and so on.
+
+Once a workspace has an attached read datastore, you can run the dbg process to
+produce a first de-Bruijn graph of the genome.
+
+```@example dbgeg
+dbg!(BigDNAMer{61}, 10, ws, "my-ecoli")
+```
+
