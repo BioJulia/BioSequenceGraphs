@@ -1324,3 +1324,46 @@ SequenceDistanceGraph(fastq_file_name::String,save_name::String,read_num::Int64,
 SequenceDistanceGraph(kmerlist::Vector{DNAKmer{K}},error::Bool) where {K} = new_graph_from_kmerlist_with_error_correction(kmerlist,error)
 SequenceDistanceGraph(kmerlist::Vector{DNAKmer{K}}) where {K} = new_graph_from_kmerlist(kmerlist)
 SequenceDistanceGraph(kmerlist::Vector{DNAKmer{K}},coverage::Vector{Float64}) where {K} = new_graph_from_kmerlist2(kmerlist,coverage)
+
+
+
+
+function clip_tips!(sg::GRAPH_TYPE, tip_size::Int)
+    while true
+        to_delete = Set{NodeID}()
+        @info "Finding tips to clip"
+        for n in each_node_id(sg)
+            nd = node(sg, n)
+            if is_deleted(nd)
+                continue
+            end
+            if length(nd) > tip_size
+                continue
+            end
+            @debug string("Evaluating node ", n)
+            fwl = forward_links(sg, n)
+            bwl = backward_links(sg, n)
+            @debug "Forward and backward links" fwl bwl
+            if length(fwl) == 1 && length(bwl) == 0
+                if length(backward_links(sg, destination(first(fwl)))) > 1
+                    @debug string("Marking node ", n, " for deletion")
+                    push!(to_delete, n)
+                end
+            end
+            if length(fwl) == 0 && length(bwl) == 1
+                if length(forward_links(sg, -destination(first(bwl)))) > 1
+                    @debug string("Marking node ", n, " for deletion")
+                    push!(to_delete, n)
+                end
+            end
+            if isempty(fwl) && isempty(bwl)
+                @debug string("Marking node ", n, " for deletion")
+                push!(to_delete, n)
+            end
+        end
+        @info string("Found ", length(to_delete), " nodes to delete")
+        for n in to_delete
+            remove_node!(sg, n)
+        end
+    end
+end
