@@ -59,7 +59,7 @@ Get a reference to the vector of nodes in a graph `sg`.
 
 !!! warning
     It is a bad idea to edit this vector yourself unless you know what you are
-    doing. 
+    doing.
 """
 @inline nodes(sg::SequenceDistanceGraph) = sg.nodes
 
@@ -107,7 +107,7 @@ end
 """
     links(sg::SequenceGraph, n::NodeID)
 
-Get all of the links of a Node of a sequence distance graph using its 
+Get all of the links of a Node of a sequence distance graph using its
 correlative node id `n`.
 
 !!! note
@@ -195,7 +195,7 @@ function remove_node!(sg::SequenceDistanceGraph{S}, n::NodeID) where {S<:BioSequ
         remove_link!(sg, source(oldlink), destination(oldlink))
     end
     # TODO: This is a lazy solution to getting rid of the node.
-    nodes[n] = empty_node(S)
+    nodes(sg)[n] = empty_node(S)
 end
 
 
@@ -227,10 +227,10 @@ didn't exist in the graph, and so could not be removed.
 function remove_link!(sg::SequenceDistanceGraph, source::NodeID, dest::NodeID)
     slinks = links(sg, source)
     slinkslen = length(slinks)
-    filter!(!isequal(SequenceGraphLink(source, dest, 0)), slinks)
+    filter!(!isequal(DistanceGraphLink(source, dest, 0)), slinks)
     dlinks = links(sg, dest)
     dlinkslen = length(dlinks)
-    filter!(!isequal(SequenceGraphLink(dest, source, 0)), dlinks)
+    filter!(!isequal(DistanceGraphLink(dest, source, 0)), dlinks)
     return slinkslen != length(slinks) || dlinkslen != length(dlinks)
 end
 
@@ -312,12 +312,14 @@ function get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
 end
 
 function dump_to_gfa1(sg, filename)
+    @info string("Saving graph to ", filename)
     fasta_filename = "$filename.fasta"
     gfa = open("$filename.gfa", "w")
     fasta = open(FASTA.Writer, fasta_filename)
-    
+
     println(gfa, "H\tVN:Z:1.0")
-    
+
+    println(gfa, "H\tVN:Z:1.0")
     for nid in eachindex(nodes(sg))
         n = node(sg, nid)
         if n.deleted
@@ -325,7 +327,6 @@ function dump_to_gfa1(sg, filename)
         end
         println(gfa, "S\tseq", nid, "\tLN:i:", length(n.seq), "\tUR:Z:", fasta_filename)
     end
-    
     for ls in links(sg)
         for l in ls
             if source(l) <= destination(l)
