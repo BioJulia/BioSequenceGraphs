@@ -366,6 +366,36 @@ function add_nodes!(sg::SequenceDistanceGraph{S}, fa::FASTA.Reader) where {S<:Bi
     return sg
 end
 
+function find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_size::Integer)
+    empty!(result)
+    for n in each_node_id(sg)
+        nd = node(sg, n)
+        if is_deleted(nd) || length(nd) > tip_size
+            continue
+        end
+        fwl = forward_links(sg, n)
+        bwl = backward_links(sg, n)
+        if length(fwl) == 1 && length(bwl) == 0
+            if length(backward_links(sg, destination(first(fwl)))) > 1
+                push!(result, n)
+            end
+        end
+        if length(fwl) == 0 && length(bwl) == 1
+            if length(forward_links(sg, -destination(first(bwl)))) > 1
+                push!(result, n)
+            end
+        end
+        if isempty(fwl) && isempty(bwl)
+            push!(result, n)
+        end
+    end
+    return result
+end
+
+function find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
+    return topological_tips!(Set{NodeID}(), sg, min_size)
+end
+
 """
     load_from_gfa1!(sg::SequenceDistanceGraph{S}, gfafile::AbstractString, fafile::AbstractString) where {S<:BioSequence}
 
