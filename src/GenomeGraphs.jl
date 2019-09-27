@@ -88,7 +88,7 @@ include("mertools/MerFreq.jl")
 include("mertools/counting.jl")
 
 include("graph/SequenceDistanceGraph.jl")
-include("graph/graph_building.jl")
+#include("graph/graph_building.jl")
 
 include("indexes/unique-kmers.jl")
 

@@ -15,6 +15,10 @@ source(l::DistanceGraphLink) = l.source
 destination(l::DistanceGraphLink) = l.destination
 distance(l::DistanceGraphLink) = l.dist
 
+function Base.isequal(x::DistanceGraphLink, y::DistanceGraphLink)
+    return source(x) == source(y) && destination(x) == destination(y)
+end
+
 "Test if link `l` is a forward link leaving node `n`."
 is_forwards_from(l::DistanceGraphLink, n::NodeID) = source(l) == -n
 is_backwards_from(l::DistanceGraphLink, n::NodeID) = source(l) == n

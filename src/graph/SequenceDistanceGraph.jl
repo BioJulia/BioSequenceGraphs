@@ -224,13 +224,13 @@ Returns a boolean indicating whether the removal was successful.
 Reasons this function would not return `true` include that the link
 didn't exist in the graph, and so could not be removed.
 """
-function remove_link!(sg::SequenceDistanceGraph, source::NodeID, dest::NodeID)
-    slinks = links(sg, source)
+function remove_link!(sg::SequenceDistanceGraph, src::NodeID, dst::NodeID)
+    slinks = links(sg, src)
     slinkslen = length(slinks)
-    filter!(!isequal(DistanceGraphLink(source, dest, 0)), slinks)
-    dlinks = links(sg, dest)
+    filter!(!isequal(DistanceGraphLink(src, dst, 0)), slinks)
+    dlinks = links(sg, dst)
     dlinkslen = length(dlinks)
-    filter!(!isequal(DistanceGraphLink(dest, source, 0)), dlinks)
+    filter!(!isequal(DistanceGraphLink(dst, src, 0)), dlinks)
     return slinkslen != length(slinks) || dlinkslen != length(dlinks)
 end
 
@@ -262,7 +262,7 @@ function forward_links(sg::SequenceDistanceGraph, n::NodeID)
     nodelinks = links(sg, n)
     sizehint!(r, length(nodelinks))
     for link in nodelinks
-        if is_forward_from(link, n)
+        if is_forwards_from(link, n)
             push!(r, link)
         end
     end
@@ -311,22 +311,21 @@ function get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
     return r
 end
 
-function dump_to_gfa1(sg, filename)
+function write_to_gfa1(sg, filename)
     @info string("Saving graph to ", filename)
     fasta_filename = "$filename.fasta"
     gfa = open("$filename.gfa", "w")
     fasta = open(FASTA.Writer, fasta_filename)
-
-    println(gfa, "H\tVN:Z:1.0")
-
     println(gfa, "H\tVN:Z:1.0")
     for nid in eachindex(nodes(sg))
         n = node(sg, nid)
         if n.deleted
             continue
         end
-        println(gfa, "S\tseq", nid, "\tLN:i:", length(n.seq), "\tUR:Z:", fasta_filename)
+        println(gfa, "S\tseq", nid, "\t*\tLN:i:", length(n), "\tUR:Z:", fasta_filename)
+        write(fasta, FASTA.Record(string("seq", nid), sequence(n)))
     end
+    close(fasta)
     for ls in links(sg)
         for l in ls
             if source(l) <= destination(l)
@@ -346,7 +345,6 @@ function dump_to_gfa1(sg, filename)
         end
     end
     close(gfa)
-    close(fasta)
 end
 
 function add_nodes!(sg::SequenceDistanceGraph{S}, fa::FASTA.Reader) where {S<:BioSequence}
@@ -370,7 +368,7 @@ function find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_siz
     empty!(result)
     for n in each_node_id(sg)
         nd = node(sg, n)
-        if is_deleted(nd) || length(nd) > tip_size
+        if is_deleted(nd) || length(nd) > min_size
             continue
         end
         fwl = forward_links(sg, n)
@@ -393,7 +391,39 @@ function find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_siz
 end
 
 function find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
-    return topological_tips!(Set{NodeID}(), sg, min_size)
+    return find_tip_nodes!(Set{NodeID}(), sg, min_size)
+end
+
+function find_all_unitigs(sg::G, min_nodes::Integer) where {G<:SequenceDistanceGraph}
+    unitigs = Vector{SequenceGraphPath{G}}()
+    consumed = falses(n_nodes(sg))
+    for n in each_node_id(sg)
+        if consumed[n] || is_deleted(node(sg, n))
+            continue
+        end
+        consumed[n] = true
+        path = SequenceGraphPath(sg, [n])
+        
+        # Two passes, fw and bw, path is inverted twice, so still n is +
+        for pass in 1:2
+            fn = forward_links(sg, last(path))
+            while length(fn) == 1
+                dest = destination(first(fn))
+                if (!consumed[abs(dest)]) && (length(backward_links(sg, dest)) == 1)
+                    push!(path, dest)
+                    consumed[abs(dest)] = true
+                else
+                    break
+                end
+                fn = forward_links(sg, last(path))
+            end
+            reverse!(path)
+        end
+        if n_nodes(path) >= min_nodes
+            push!(unitigs, path)
+        end
+    end
+    return unitigs
 end
 
 """
