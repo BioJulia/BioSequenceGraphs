@@ -11,11 +11,13 @@ struct DistanceGraphLink
     dist::Int64
 end
 
+DistanceGraphLink(src::NodeID, dst::NodeID) = DistanceGraphLink(src, dst, 0)
+
 source(l::DistanceGraphLink) = l.source
 destination(l::DistanceGraphLink) = l.destination
 distance(l::DistanceGraphLink) = l.dist
 
-function Base.isequal(x::DistanceGraphLink, y::DistanceGraphLink)
+function Base.:(==)(x::DistanceGraphLink, y::DistanceGraphLink)
     return source(x) == source(y) && destination(x) == destination(y)
 end
 

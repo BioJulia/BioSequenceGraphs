@@ -50,8 +50,9 @@ function SequenceDistanceGraph{S}() where {S<:BioSequence}
     return SequenceDistanceGraph{S}(Vector{SDGNode{S}}(), LinksT())
 end
 
+
 ###
-### Basic query and property access functions
+### Basic node query and property access functions
 ###
 
 """
@@ -68,14 +69,6 @@ Get a reference to the vector of nodes in a graph `sg`.
 
 "Iterate over every node ID in the sequence distance graph `sg`."
 @inline each_node_id(sg::SequenceDistanceGraph) = eachindex(nodes(sg))
-
-"""
-Get a reference to the vector of vectors of links in a graph `sg`.
-
-!!! warning
-    It is a bad idea to edit this vector yourself unless you know what you are doing.
-"""
-@inline links(sg::SequenceDistanceGraph) = sg.links
 
 @inline function check_node_id(sg::SequenceDistanceGraph, i::NodeID)
     if 0 < abs(i) ≤ n_nodes(sg)
@@ -102,6 +95,32 @@ correlative node id `n`.
     return node_unsafe(sg, n)
 end
 
+@inline sequence_unsafe(sg::SequenceDistanceGraph, n::NodeID) = sequence(node_unsafe(sg, n))
+
+"""
+    sequence(sg::SequenceDistanceGraph, n::NodeID)
+
+Get the full sequence of a node in a sequence distance graph using its
+correlative node id `n`.
+"""
+function sequence(sg::SequenceDistanceGraph, n::NodeID)
+    check_node_id(sg, n)
+    return sequence_unsafe(sg, n)
+end
+
+
+###
+### Basic link query and property access functions
+###
+
+"""
+Get a reference to the vector of vectors of links in a graph `sg`.
+
+!!! warning
+    It is a bad idea to edit this vector yourself unless you know what you are doing.
+"""
+@inline links(sg::SequenceDistanceGraph) = sg.links
+
 @inline links_unsafe(sg::SequenceDistanceGraph, n::NodeID) = @inbounds links(sg)[abs(n)]
 
 """
@@ -120,17 +139,14 @@ correlative node id `n`.
     return links_unsafe(sg, n)
 end
 
-@inline sequence_unsafe(sg::SequenceDistanceGraph, n::NodeID) = sequence(node_unsafe(sg, n))
-
-"""
-    sequence(sg::SequenceDistanceGraph, n::NodeID)
-
-Get the full sequence of a node in a sequence distance graph using its
-correlative node id `n`.
-"""
-function sequence(sg::SequenceDistanceGraph, n::NodeID)
-    check_node_id(sg, n)
-    return sequence_unsafe(sg, n)
+function find_link(sg::SequenceDistanceGraph, src::NodeID, dst::NodeID)
+    query = DistanceGraphLink(src, dst)
+    for l in links(sg, src)
+        if l == query
+            return l
+        end 
+    end
+    return nothing
 end
 
 
