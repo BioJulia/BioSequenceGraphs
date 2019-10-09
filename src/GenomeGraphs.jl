@@ -79,7 +79,8 @@ export
     ### Processes
     ###
     dbg,
-    dbg!
+    dbg!,
+    remove_tips!
 
 using BioSequences, FASTX, ReadDatastores
 import BioSequences.EveryMerIterator
@@ -95,4 +96,5 @@ include("indexes/unique-kmers.jl")
 include("datastores/kmer-counts.jl")
 include("workspace/WorkSpace.jl")
 include("processes/dbg.jl")
+include("processes/remove_tips.jl")
 end # module GenomeGraphs

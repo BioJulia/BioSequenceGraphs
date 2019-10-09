@@ -203,6 +203,11 @@ end
 Remove a node from a sequence distance graph.
 
 !!! note
+    This method can accepts a NodeID that can be positive or negative.
+    E.g. providing either 5 or -5 both mean node 5 in a graph,
+    and so you will end up deleting node 5.
+
+!!! note
     Links involving this node will also be removed from the graph.
 """
 function remove_node!(sg::SequenceDistanceGraph{S}, n::NodeID) where {S<:BioSequence}
@@ -211,7 +216,7 @@ function remove_node!(sg::SequenceDistanceGraph{S}, n::NodeID) where {S<:BioSequ
         remove_link!(sg, source(oldlink), destination(oldlink))
     end
     # TODO: This is a lazy solution to getting rid of the node.
-    nodes(sg)[n] = empty_node(S)
+    nodes(sg)[abs(n)] = empty_node(S)
 end
 
 
@@ -410,8 +415,9 @@ function find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
     return find_tip_nodes!(Set{NodeID}(), sg, min_size)
 end
 
-function find_all_unitigs(sg::G, min_nodes::Integer) where {G<:SequenceDistanceGraph}
-    unitigs = Vector{SequenceGraphPath{G}}()
+function find_all_unitigs!(unitigs::Vector{SequenceGraphPath{G}},
+    sg::G, min_nodes::Integer) where {G<:SequenceDistanceGraph}
+    empty!(unitigs)
     consumed = falses(n_nodes(sg))
     for n in each_node_id(sg)
         if consumed[n] || is_deleted(node(sg, n))
@@ -440,6 +446,29 @@ function find_all_unitigs(sg::G, min_nodes::Integer) where {G<:SequenceDistanceG
         end
     end
     return unitigs
+end
+
+function find_all_unitigs(sg::G, min_nodes::Integer) where {G<:SequenceDistanceGraph}
+    return find_all_unitigs!(Vector{SequenceGraphPath{G}}(), sg, min_nodes)
+end
+
+function collapse_all_unitigs!(unitigs::Vector{SequenceGraphPath{G}},
+                               newnodes::Vector{NodeID},
+                               sg::G,
+                               min_nodes::Integer,
+                               consume::Bool) where {G<:SequenceDistanceGraph}
+    
+    find_all_unitigs!(unitigs, sg, min_nodes)
+    resize!(newnodes, length(unitigs))
+    @inbounds for i in eachindex(unitigs)
+        newnodes[i] = join_path!(unitigs[i], consume)
+    end
+end
+
+function collapse_all_unitigs!(sg::SequenceDistanceGraph, min_nodes::Integer, consume::Bool)
+    unitigs = Vector{SequenceGraphPath{typeof(sg)}}()
+    newnodes = Vector{NodeID}()
+    return collapse_all_unitigs!(unitigs, newnodes, sg, min_nodes, consume)
 end
 
 """

@@ -12,6 +12,7 @@ SequenceGraphPath(sg::G) where {G<:SequenceDistanceGraph} = SequenceGraphPath{G}
 @inline Base.first(p::SequenceGraphPath) = first(nodes(p))
 @inline Base.last(p::SequenceGraphPath) = last(nodes(p))
 
+#=
 function Base.reverse!(p::SequenceGraphPath)
     nds = nodes(p)
     for i in 1:div(lastindex(nds), 2)
@@ -20,6 +21,22 @@ function Base.reverse!(p::SequenceGraphPath)
         @inbounds y = nds[j]
         @inbounds nds[i] = -y
         @inbounds nds[j] = -x
+    end
+    return p
+end
+=#
+
+function Base.reverse!(p::SequenceGraphPath)
+    nds = nodes(p)
+    i = firstindex(nds)
+    j = lastindex(nds)
+    while i ≤ j
+        @inbounds x = nds[i]
+        @inbounds y = nds[j]
+        @inbounds nds[i] = -y
+        @inbounds nds[j] = -x
+        i = i + 1
+        j = j - 1
     end
     return p
 end
@@ -39,6 +56,9 @@ function check_overlap(a::BioSequence, b::BioSequence, by::Integer)
     return true
 end
 
+# TODO: This function currently does not check for deleted nodes in a graph.
+# It probably should throw an error if a node is deleted and you're trying to
+# use it in a path.
 function sequence(p::SequenceGraphPath{SequenceDistanceGraph{S}}) where {S<:BioSequence}
     s = S()
     pnode = 0
@@ -83,6 +103,7 @@ function join_path!(p::SequenceGraphPath, consume::Bool)
     pnodes = Set{NodeID}()
     for n in nodes(p)
         push!(pnodes, n)
+        push!(pnodes, -n)
     end
     # If p is not canonical, flip it.
     ps = sequence(p)
@@ -125,4 +146,5 @@ function join_path!(p::SequenceGraphPath, consume::Bool)
             remove_node!(graph(p), n)
         end
     end
+    return newid
 end

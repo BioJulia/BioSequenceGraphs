@@ -1,4 +1,33 @@
 
+function remove_tips!(ws::WorkSpace, min_size::Integer)
+    @info "Beginning tip removal process"
+    sdg = graph(ws)
+    pass = 1
+    tips = find_tip_nodes(sdg, min_size)
+    ntips = length(tips)
+    utgs = Vector{SequenceGraphPath{typeof(sdg)}}()
+    newnodes = Vector{NodeID}()
+    while true
+        @info string("Pass number: ", pass)
+        if isempty(tips)
+            @info "No more tips in graph"
+            break
+        end
+        @info string("Found ", ntips, " tips")
+        for tip in tips
+            remove_node!(sdg, tip)
+        end
+        @info string("Removed ", ntips, " tips")
+        @info "Collapsing any resulting transient paths"
+        collapse_all_unitigs!(utgs, newnodes, sdg, 2, true)
+        pass = pass + 1
+        tips = find_tip_nodes(sdg, min_size)
+        ntips = length(tips)
+    end
+    @info string("Finished tip removal process in ", pass, " passes")
+    return ws
+end
+
 """
 For sequences longer than initial kmers we can not naively check the overlaps between them
 using the same functions designed for Kmers. This is because direction becomes an issue.
@@ -98,7 +127,7 @@ function delete_tips_graph(sdg::SequenceDistanceGraph,coverage :: Vector{Float64
     i = 1
     @info string("All found tips : ",tips)
     @info string("Parents : ", parents)
-    while i<= Base.length(tips)
+    while i <= Base.length(tips)
         clust = searchsorted(parents,tips[i][1])
         @info string("Tip number : ", tips[i])
         @info string("Clust :  ", clust)
