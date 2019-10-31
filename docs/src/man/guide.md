@@ -50,6 +50,7 @@ raw sequencing reads. This can be achieved with a few simple steps:
 1. Prepare the sequencing reads & build a datastore.
 2. Add the read datastore to a WorkSpace.
 3. Run the dbg process.
+4. Run the tip removal process.
 
 ### Preparing the sequencing reads
 
@@ -128,3 +129,46 @@ dbg!(BigDNAMer{61}, 10, ws, "my-ecoli")
     This process should take just about a minute for E.coli paired end reads with
     a decent coverage.
     So, be warned, for big stuff, performance may suuuuuuucck in these early days!
+
+### Run the `remove_tips` process
+
+Now you have a raw compressed de-Bruijn assembly graph. You can start to use it
+for analyses, and also try to improve its structure and resolve parts of the
+graph that represent error, repetitive content, and so forth. Some of these
+structures can be identified and resolved using only the topology of the graph,
+some require additional information sources (linked reads / long reads / and so on),
+to be incorporated into the workspace first.
+
+Here let's see how to resolve a common structure, using only the graph topology.
+
+Let's fix the tips of the graph.
+
+Tips looks like this:
+
+![tips](assets/tips.jpeg)
+
+See how a piece of the assembly which should be one long stretch of sequence is
+broken into 3 pieces (red) because of the existence of two tips (blue). Such
+tips are defined topologically as very short segments which have one incoming
+neighbour, and no outgoing neighbour.
+
+Tips are caused by sequencer errors that occur at the end of reads, because the
+sequencing by synthesis technique becomes more error prone over time; reagents
+are consumed and products generated as time progresses, making the base detection
+more difficult. Hence errors occur at the ends of reads, and erroneous kmers
+from the read ends are unlikely to have forward neighbours, and they end up
+forming tip nodes when they are incorporated into the de-Bruijn graph. 
+
+you can remove these tips and improve the contiguity of the graph by using the
+`remove_tips!` process.
+
+```julia
+remove_tips!(ws, 200)
+```
+
+The value of 200 provided is a size (in base pairs) threshold:
+Nodes are considered tips only if they have one ingoing neighbour, no outgoing
+neighbours, and are (in this case) smaller than 200 base pairs in length.
+
+Once this process is finished you will have a collapsed de-Bruijn graph with the
+tips removed.
