@@ -172,3 +172,30 @@ neighbours, and are (in this case) smaller than 200 base pairs in length.
 
 Once this process is finished you will have a collapsed de-Bruijn graph with the
 tips removed.
+
+## Using the NodeView interface
+
+Graphs can be complicated data structures. If you want an in depth explanation
+of the data-structure used to represent genome graphs, then head [here](notyet).
+
+However, most people should not have to care about the internal structure of the
+graph.
+
+To make things as simple as possible, the `NodeView` type provides a single
+entry point for node-centric analyses. The `NodeView` wraps a point to a
+workspace's graph and contains a node id. A `NodeView` gives you acces to a
+node's underlying sequence, the nodes neighbouring nodes in the forward and
+backward directions, the reads mapped to a node, and kmer coverage over the node.
+
+To get a `NodeView` of a node, use the `node` method on a `WorkSpace`, providing
+a node id number. A positive ID denotes a view of the node traversing it in the
+forward (canonical) direction. A negative ID denotes a view of the node,
+traversing it in the reverse complement direction.   
+
+```julia
+julia> n = node(ws, 3)
+A view of a graph node (node: 3, graph: sdg):
+  AAAAAACCTCCGCAACCCCATGTTTTCACATAACTGTTG…GCCATGACCGGCTGGCTGTCAGGCTGTCACTGATAATCA
+
+
+```

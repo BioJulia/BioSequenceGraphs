@@ -55,6 +55,8 @@ end
 ### Basic node query and property access functions
 ###
 
+@inline name(sg::SequenceDistanceGraph) = :sdg
+
 """
 Get a reference to the vector of nodes in a graph `sg`.
 
