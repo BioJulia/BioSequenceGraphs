@@ -97,6 +97,17 @@ correlative node id `n`.
     return node_unsafe(sg, n)
 end
 
+"""
+    sequence_unsafe(sg::SequenceDistanceGraph, n::NodeID)
+
+Get the reference to a node's underlying sequence object.
+
+!!! warning
+    This method is unsafe, no checking of node id's occurs and you get a
+    reference to the node's sequence object - not a copy, so doing transformation
+    operations (reverse_complement, setindex, etc.) to it will probably screw up
+    the graph!
+"""
 @inline sequence_unsafe(sg::SequenceDistanceGraph, n::NodeID) = sequence(node_unsafe(sg, n))
 
 """
@@ -104,10 +115,29 @@ end
 
 Get the full sequence of a node in a sequence distance graph using its
 correlative node id `n`.
+
+!!! note
+    `sequence` accepts a NodeID that can be positive or negative.
+    Nodes represent stretches of sequence in a canonical orientation, if you ask
+    for for the sequence of say the third node, the positive node id 3
+    (which denotes traversing the third node in the forward direction),
+    gives you the canonical sequence. If you use the negative ID -3
+    (which denotes traversing the third node in the reverse direction), you will
+    get the reverse complement of the node's canonical (forward) sequence.
+
+!!! note
+    It is safe to modify the returned sequence without screwing up your graph,
+    yet thanks to BioSequences.jl's copy on write system for LongSequences, data
+    copying will only occur if nessecery. You get the best of both worlds.
 """
 function sequence(sg::SequenceDistanceGraph, n::NodeID)
     check_node_id(sg, n)
-    return sequence_unsafe(sg, n)
+    seqref = sequence_unsafe(sg, n)
+    outseq = typeof(seqref)(seqref, 1:lastindex(seqref))
+    if n < 0
+        reverse_complement!(outseq)
+    end
+    return outseq
 end
 
 

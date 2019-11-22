@@ -2,7 +2,7 @@
 
 "The NodeView provides a read-only comfortable interface for graph traversal."
 struct NodeView{G<:SequenceDistanceGraph}
-    ws::WorkSpace
+    ws::WorkSpace{G}
     id::NodeID
     graph::G
 end
@@ -31,9 +31,10 @@ node(lv::LinkView) = lv.node_view
 """
     Get the sequence of the underlying SequenceDistanceGraph node.
 """
-sequence(nv::NodeView) = sequence(graph(nv), id(nv))
+@inline sequence(nv::NodeView) = sequence(graph(nv), id(nv))
+@inline sequence_unsafe(nv::NodeView) = sequence_unsafe(graph(nv), id(nv))
 
-Base.length(nv::NodeView) = length(sequence(graph(nv), id(nv)))
+Base.length(nv::NodeView) = length(sequence_unsafe(nv))
 
 id(nv::NodeView) = nv.id
 graph(nv::NodeView) = nv.graph
@@ -55,7 +56,7 @@ function Base.summary(io::IO, nv::NodeView)
     print(io, "A view of a graph node (node: ", id(nv), ", graph: ", name(graph(nv)), "):")
 end
 
-function Base.show(io::IO, nv::NodeView)
+function Base.show(io::IO, ::MIME"text/plain", nv::NodeView)
     summary(io, nv)
     print(io, "\n  ")
     show(io, sequence(nv))
