@@ -2,7 +2,7 @@
 
 "The NodeView provides a read-only comfortable interface for graph traversal."
 struct NodeView{G<:SequenceDistanceGraph}
-    ws::WorkSpace{G}
+    ws::WorkSpace
     id::NodeID
     graph::G
 end
