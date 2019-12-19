@@ -153,12 +153,12 @@ function build_unitigs_from_sorted_kmers!(
         add_node!(sg, canonical!(s))
     end
     
-    if !all(used_kmers)
-        @warn "Some kmers have not been incorporated into unitigs. This may be a case of the circle problem" kmerlist[(!).(used_kmers)]
-    end
-    
     # Check for perfect circles now.
     next_unused = findnext(!, used_kmers, firstindex(used_kmers))
+    if !isnothing(next_unused)
+        @info "Perfect circles are present in the input mers"
+        @info "Breaking the circles and incorporating them into the graph"
+    end
     while !isnothing(next_unused)
         start_kmer = kmerlist[next_unused]
         end_fw = is_end_fw(start_kmer, kmerlist)
