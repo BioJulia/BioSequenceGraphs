@@ -9,6 +9,9 @@ makedocs(
         "Home" => "index.md",
         "Manual" => [
             "Guide" => "man/guide.md"
+        ],
+        "API" => [
+            "Graphs" => "api/SequenceDistanceGraph.md"
         ]
     ],
     
