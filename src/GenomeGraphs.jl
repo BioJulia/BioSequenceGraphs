@@ -34,20 +34,32 @@ export
     ###
     ### Sequence Distance Graph
     ###
+    DistanceGraphLink,
     SequenceDistanceGraph,
+    SDG,
     
-    # Basic queries and properties
-    nodes,
+    # Nodes and sequences
+    name,
     n_nodes,
-    each_node_id,
-    node,
-    links,
     sequence,
+    each_node_id,
     
-    # Graph traversal
+    # Graph topology
+    find_link,
+    forward_links,
+    backward_links,
     get_next_nodes,
     get_previous_nodes,
+    find_tip_nodes,
+    find_tip_nodes!,
+    
+    
+    
     get_all_unitigs,
+    
+    # IO
+    load_from_gfa1!,
+    write_to_gfa1,
     
     ###
     ### MerFreq

@@ -37,11 +37,18 @@ A link connects two node ends, and so the order of the signed nodes in the links
 does not change the link.
 If the distance in a link is negative, this represents an overlap between two
 sequences. These overlaps must be "perfect overlaps".
+
+This SequenceDistanceGraph type is only intended to be interacted with directly
+by developers and people who know what they are doing. Most tasks an end user
+wants to do to manipulate or query a graph can be 
 """
 struct SequenceDistanceGraph{S<:BioSequence}
     nodes::Vector{SDGNode{S}}
     links::LinksT
 end
+
+"Shorthand for SequenceDistanceGraph"
+const SDG = SequenceDistanceGraph
 
 include("SequenceGraphPath.jl")
 
@@ -50,28 +57,16 @@ function SequenceDistanceGraph{S}() where {S<:BioSequence}
     return SequenceDistanceGraph{S}(Vector{SDGNode{S}}(), LinksT())
 end
 
-
-###
-### Basic node query and property access functions
-###
-
-@inline name(sg::SequenceDistanceGraph) = :sdg
+##
+## Internal / not-nessecerily-safe
+##
 
 """
-Get a reference to the vector of nodes in a graph `sg`.
+    check_node_id(sg::SequenceDistanceGraph, i::NodeID)
 
-!!! warning
-    It is a bad idea to edit this vector yourself unless you know what you are
-    doing.
+The method responsible for checking that a node id used as input to a method
+that queries or edits a `SequenceDistanceGraph` is a sensible value.
 """
-@inline nodes(sg::SequenceDistanceGraph) = sg.nodes
-
-"Get the number of nodes in the sequence distance graph `sg`."
-@inline n_nodes(sg::SequenceDistanceGraph) = length(nodes(sg))
-
-"Iterate over every node ID in the sequence distance graph `sg`."
-@inline each_node_id(sg::SequenceDistanceGraph) = eachindex(nodes(sg))
-
 @inline function check_node_id(sg::SequenceDistanceGraph, i::NodeID)
     if 0 < abs(i) ≤ n_nodes(sg)
         return true
@@ -79,18 +74,57 @@ Get a reference to the vector of nodes in a graph `sg`.
     @error "Sequence graph has no node with ID of $i"
 end
 
+
+"""
+Get a **reference** to the vector of nodes in a graph `sg`.
+
+!!! warning
+    It is a bad idea to edit this vector yourself unless you know what you are
+    doing.
+"""
+@inline nodes(sg::SequenceDistanceGraph) = sg.nodes
+
+"""
+    node_unsafe(sg::SequenceDistanceGraph, n::NodeID)
+
+Get a refernece specific node from a sequence distance graph `sg` using its
+correlative node id `n`.
+
+!!! note
+    `node_unsafe` accepts a NodeID that can be positive or negative.
+    E.g. providing either 5 or -5 both mean node 5 in a graph,
+    and so you will get the node for node 5.
+
+!!! warning
+    This method returns a **reference** to a graph's underlying `SDGNode`.
+    NOT a copy! Messing with this will screw up your graph. So this method is
+    not recommended or exported - unless you really know what you're doing.
+
+!!! warning
+    This method is explicitly marked unsafe for a reason.
+    It does *zero* checking of the value it is passed as the node id.
+    It also makes use of the `@inbounds` macro.
+    This makes it faster, but you need to be 100% sure that your code won't try
+    to call this with a bad id. So it is not exported or recommended
+    - unless you really know what you're doing.
+"""
 @inline node_unsafe(sg::SequenceDistanceGraph, n::NodeID) = @inbounds nodes(sg)[abs(n)]
 
 """
     node(sg::SequenceDistanceGraph, n::NodeID)
 
-Get a specific node from a sequence distance graph `sg` using its
-correlative node id `n`.
+Get a **reference** to a specific node from a sequence distance graph `sg` using
+its correlative node id `n`.
 
 !!! note
     `node` accepts a NodeID that can be positive or negative.
     E.g. providing either 5 or -5 both mean node 5 in a graph,
     and so you will get the links for node 5.
+
+!!! warning
+    This method returns a **reference** to a graph's underlying `SDGNode`.
+    NOT a copy! Messing with this will screw up your graph. So this method is
+    not recommended or exported - unless you really know what you're doing.
 """
 @inline function node(sg::SequenceDistanceGraph, n::NodeID)
     check_node_id(sg, n)
@@ -109,6 +143,79 @@ Get the reference to a node's underlying sequence object.
     the graph!
 """
 @inline sequence_unsafe(sg::SequenceDistanceGraph, n::NodeID) = sequence(node_unsafe(sg, n))
+
+"""
+Get a **reference** to the vector of vectors of links in a graph `sg`.
+
+!!! warning
+    It is a bad idea to edit this vector yourself unless you know what you are
+    doing.
+"""
+@inline links(sg::SequenceDistanceGraph) = sg.links
+
+"""
+    links_unsafe(sg::SequenceDistanceGraph, n::NodeID)
+
+Get a **reference** to a vector storing all the links of a node in a
+`SequenceDistanceGraph`, the node is specified using its correlative node id `n`.
+
+!!! note
+    `links_unsafe` accepts a NodeID that can be positive or negative.
+    E.g. providing either 5 or -5 both mean node 5 in a graph,
+    and so you will get the links for node 5.
+
+!!! warning
+    This method returns a **reference** to an underlying links vector that the
+    `SequenceDistanceGraph` owns - NOT a copy!
+    Messing with this will screw up your graph. So this method is not
+    recommended or exported - unless you really know what you're doing.
+
+!!! warning
+    This method is explicitly marked unsafe for a reason.
+    It does *zero* checking of the value it is passed as the node id.
+    It also makes use of the `@inbounds` macro.
+    This makes it faster, but you need to be 100% sure that your code won't try
+    to call this with a bad id. So it is not exported or recommended
+    - unless you really know what you're doing.
+"""
+@inline links_unsafe(sg::SequenceDistanceGraph, n::NodeID) = @inbounds links(sg)[abs(n)]
+
+"""
+    links(sg::SequenceGraph, n::NodeID)
+
+    Get a **reference** to a vector storing all the links of a node in a
+    `SequenceDistanceGraph`, the node is specified using its correlative node id `n`.
+
+!!! note
+    `links` accepts a NodeID that can be positive or negative.
+    E.g. providing either 5 or -5 both mean node 5 in a graph,
+    and so you will get the links for node 5.
+
+!!! warning
+    This method returns a **reference** to an underlying links vector that the
+    `SequenceDistanceGraph` owns - NOT a copy!
+    Messing with this will screw up your graph. So this method is not
+    recommended or exported - unless you really know what you're doing.
+"""
+@inline function links(sg::SequenceDistanceGraph, n::NodeID)
+    check_node_id(sg, n)
+    return links_unsafe(sg, n)
+end
+
+##
+## Public / safe
+##
+
+"Get the name of the graph. Defaults to the symbol :sdg."
+@inline name(sg::SequenceDistanceGraph) = :sdg
+
+## Nodes and sequences
+
+"Get the number of nodes in the sequence distance graph `sg`."
+@inline n_nodes(sg::SequenceDistanceGraph) = length(nodes(sg))
+
+"Iterate over every node ID in the sequence distance graph `sg`."
+@inline each_node_id(sg::SequenceDistanceGraph) = eachindex(nodes(sg))
 
 """
     sequence(sg::SequenceDistanceGraph, n::NodeID)
@@ -140,37 +247,48 @@ function sequence(sg::SequenceDistanceGraph, n::NodeID)
     return outseq
 end
 
-
-###
-### Basic link query and property access functions
-###
+## Graph Topology
 
 """
-Get a reference to the vector of vectors of links in a graph `sg`.
+    find_link(sg::SequenceDistanceGraph, src::NodeID, dst::NodeID)
 
-!!! warning
-    It is a bad idea to edit this vector yourself unless you know what you are doing.
-"""
-@inline links(sg::SequenceDistanceGraph) = sg.links
+Find and return the link that exists between a source node and a destination
+node, using their correlative node ids.
 
-@inline links_unsafe(sg::SequenceDistanceGraph, n::NodeID) = @inbounds links(sg)[abs(n)]
+In this instance, the IDs also denote the "ends" of a node, a link connects.
 
-"""
-    links(sg::SequenceGraph, n::NodeID)
+Recall that every node has an orientaton: Each node has a positive end (+),
+and a negative end (-).
+So when a node is accessed with (or traversed by entering) the positive end the
+node yields the stored sequence.
+Conversely, when a node is accessed with (or traversed by entering) the negative
+end the node yelds the reverse complement of the stored sequence.
 
-Get all of the links of a Node of a sequence distance graph using its
-correlative node id `n`.
+Thus `find_link(sg, -5, 1)` means you want to find a link in the graph that
+allows you to exit the (-) end of node 5 (meaning you just traversed it in the 
+canonical + --> - orientation), and enter the (+) end of node 1 (meaning you will
+also traverse node one in the canonical + --> - orientation).
+
+By contrast `find_link(sg, -5, -1)` means you want to find a link in the graph
+that allows you to exit the (-) end of node 5 - again having just traverse it in
+the + --> - orientation, but want to enter node 1 through it's (-) end - and thus
+traversing node 1 in the + <-- - orientation, yielding the reverse complement of
+the canonical sequence of node 1.
+
+If a link connecting the two node ends is present, you get it. If not, you get
+`nothing`. So make sure to check the output.
 
 !!! note
-    `links` accepts a NodeID that can be positive or negative.
-    E.g. providing either 5 or -5 both mean node 5 in a graph,
-    and so you will get the links for node 5.
+    This method is safe and public, but not reeeeaaallly intended for the end
+    user, as they have to worry about links between "ends" of a node.
+    In contrast to the rest of this framework, which rather has the user thinking
+    in node centric terms.
+    e.g. "I am at node 5 which means I have traversed it forwards or I am at
+    node -5, which means I have traversed node 5 backwards. From here I can visit
+    node 1, -3, and 2, so I may go through nodes 1 and 2 forwards, and through 3
+    backwards. The methods `get_next_nodes` and `get_previous_nodes` are more
+    user-friendly and follow this more node-centric mindset.
 """
-@inline function links(sg::SequenceDistanceGraph, n::NodeID)
-    check_node_id(sg, n)
-    return links_unsafe(sg, n)
-end
-
 function find_link(sg::SequenceDistanceGraph, src::NodeID, dst::NodeID)
     query = DistanceGraphLink(src, dst)
     for l in links(sg, src)
@@ -180,6 +298,187 @@ function find_link(sg::SequenceDistanceGraph, src::NodeID, dst::NodeID)
     end
     return nothing
 end
+
+"""
+    forward_links(sg::SequenceDistanceGraph, n::NodeID)
+
+Get a vector of the links that are ahread of you, as you traverse node `n`,
+continuing forward in you present direction of travel (`n` can be a positive or
+negative node id).
+
+The node id can be positive or negative. For example if you use a positive ID,
+such as 5, this means you are traversing node 5 in the canonical orientation,
+and so you will get the links that allow you to leave node 5 in the canonical
+direction. If you used a negative ID such as -5, that means you are traversing
+node 5 in the non-canonical orientation, and so you will get the links that
+allow you to leave node 5 in the non-canonical direction.
+"""
+function forward_links(sg::SequenceDistanceGraph, n::NodeID)
+    r = Vector{DistanceGraphLink}()
+    nodelinks = links(sg, n)
+    sizehint!(r, length(nodelinks))
+    for link in nodelinks
+        if is_forwards_from(link, n)
+            push!(r, link)
+        end
+    end
+    return r
+end
+
+"""
+    backward_links(sg::SequenceDistanceGraph, n::NodeID)
+
+Get a vector of the links that are behind of you, as you traverse node `n`,
+continuing forward in you present direction of travel (`n` can be a positive or
+negative node id).
+
+The node id can be positive or negative. For example if you use a positive ID,
+such as 5, this means you are traversing node 5 in the canonical orientation,
+and so you will get the links that would allow you to enter node 5 in the
+canonical direction. If you used a negative ID such as -5, that means you are
+traversing node 5 in the non-canonical orientation, and so you will get the links
+that would allow you to enter node 5 in the non-canonical direction.
+"""
+backward_links(sg::SequenceDistanceGraph, n::NodeID) = forward_links(sg, -n)
+
+"""
+    get_next_nodes(sg::SequenceDistanceGraph, n::NodeID)
+
+Get the nodes you may visit next as you exit node `n`, maintaining your current
+direction of travel (`n` can be a positive or negative node ID).
+
+!!! note
+    The node id can be positive or negative. For example if you use a positive ID,
+    such as 5, this means you are traversing node 5 in the canonical orientation,
+    and so you will get the nodes you may visit as you leave node 5 in the canonical
+    direction. If you use a negative ID, such as -5, this means you are
+    traversing node 5 in the non-canonical orientation, and so you will get the
+    nodes you may visit as you leave node 5 in the non-canonical direction.
+
+!!! note
+    The list of nodes returned are also signed to denote direction: Say
+    you got `[1, -2, 3]` as a result of `get_next_nodes(sg, 5)`. That means as
+    you leave node 5 after traversing it in the canonical direction, you may
+    proceed to travel through nodes 1 and 3 in the canonical direction, and node
+    2 in the non-canonical direction.
+"""
+function get_next_nodes(sg::SequenceDistanceGraph, n::NodeID)
+    r = Vector{NodeID}()
+    nodelinks = links(sg, n)
+    sizehint!(r, length(nodelinks))
+    for link in nodelinks
+        if is_forwards_from(link, n)
+            push!(r, destination(link))
+        end
+    end
+    return r
+end
+
+"""
+    get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
+
+Get the nodes you may have previously been on before you enterd node `n`,
+maintaining your current direction of travel (`n` can be a positive or negative
+node ID).
+
+!!! note
+    The node id can be positive or negative. For example if you use a positive ID,
+    such as 5, this means you are traversing node 5 in the canonical orientation,
+    and so you will get the nodes you may have visited prior to entering node 5
+    in the canonical direction. If you use a negative ID, such as -5, this means
+    you are traversing node 5 in the non-canonical orientation, and so you will
+    get the nodes you may have visited prior to entering node 5 in the
+    non-canonical direction.
+
+!!! note
+    The list of nodes returned are also signed to denote direction: Say
+    you got `[1, -2, 3]` as a result of `get_previous_nodes(sg, 5)`. That means
+    prior to entering node 5 in the canonical direction, you may have traveled
+    through nodes 1 and 3 in the canonical direction, and node 2 in the
+    non-canonical direction.
+"""
+function get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
+    r = Vector{NodeID}()
+    nodelinks = links(sg, n)
+    sizehint!(r, length(nodelinks))
+    for link in nodelinks
+        if is_backwards_from(link, n)
+            push!(r, -destination(link))
+        end
+    end
+    return r
+end
+
+"""
+    find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_size::Integer)
+
+Get a set of IDs of all the nodes in the graph `sg` that count as "tips".
+
+Here a tip node is defined as a node that only has a single neighbouring node
+at one of it's ends, and no neighbouring nodes out of one of its other end.
+
+The node's sequence must also be larger than `min_size` base pairs in length.
+
+!!! note
+    This method modifys a `result` input. So if you want to find tips in a
+    graph repeatedly, you can resuse a `Set`, saving you some allocation costs.
+"""
+function find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_size::Integer)
+    empty!(result)
+    for n in each_node_id(sg)
+        nd = node(sg, n)
+        if is_deleted(nd) || length(nd) > min_size
+            continue
+        end
+        fwl = forward_links(sg, n)
+        bwl = backward_links(sg, n)
+        if length(fwl) == 1 && length(bwl) == 0
+            if length(backward_links(sg, destination(first(fwl)))) > 1
+                push!(result, n)
+            end
+        end
+        if length(fwl) == 0 && length(bwl) == 1
+            if length(forward_links(sg, -destination(first(bwl)))) > 1
+                push!(result, n)
+            end
+        end
+        if isempty(fwl) && isempty(bwl)
+            push!(result, n)
+        end
+    end
+    return result
+end
+
+"""
+    find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
+
+Get a set of IDs of all the nodes in the graph `sg` that count as "tips".
+
+Here a tip node is defined as a node that only has a single neighbouring node
+at one of it's ends, and no neighbouring nodes out of one of its other end.
+
+The node's sequence must also be larger than `min_size` base pairs in length.
+"""
+function find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
+    return find_tip_nodes!(Set{NodeID}(), sg, min_size)
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ###
@@ -305,64 +604,12 @@ end
 ### Graph traversal
 ###
 
-"""
-    forward_links(sg::SequenceDistanceGraph, n::NodeID)
-
-Get a vector of the links leaving `n` forward from that node.
-"""
-function forward_links(sg::SequenceDistanceGraph, n::NodeID)
-    r = Vector{DistanceGraphLink}()
-    nodelinks = links(sg, n)
-    sizehint!(r, length(nodelinks))
-    for link in nodelinks
-        if is_forwards_from(link, n)
-            push!(r, link)
-        end
-    end
-    return r
-end
-
-"""
-    backward_links(sg::SequenceDistanceGraph, n::NodeID)
-
-Get a vector of the links leaving `n` backwards from that node.
-"""
-backward_links(sg::SequenceDistanceGraph, n::NodeID) = forward_links(sg, -n)
 
 
-"""
-    get_next_nodes(sg::SequenceDistanceGraph, n::NodeID)
 
-Find node IDs for forward nodes of `n`.
-"""
-function get_next_nodes(sg::SequenceDistanceGraph, n::NodeID)
-    r = Vector{NodeID}()
-    nodelinks = links(sg, n)
-    sizehint!(r, length(nodelinks))
-    for link in nodelinks
-        if is_forwards_from(link, n)
-            push!(r, destination(link))
-        end
-    end
-    return r
-end
 
-"""
-    get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
 
-Find node IDs for backward nodes of `n`.
-"""
-function get_previous_nodes(sg::SequenceDistanceGraph, n::NodeID)
-    r = Vector{NodeID}()
-    nodelinks = links(sg, n)
-    sizehint!(r, length(nodelinks))
-    for link in nodelinks
-        if is_backwards_from(link, n)
-            push!(r, -destination(link))
-        end
-    end
-    return r
-end
+
 
 function write_to_gfa1(sg, filename)
     @info string("Saving graph to ", filename)
@@ -417,35 +664,7 @@ function add_nodes!(sg::SequenceDistanceGraph{S}, fa::FASTA.Reader) where {S<:Bi
     return sg
 end
 
-function find_tip_nodes!(result::Set{NodeID}, sg::SequenceDistanceGraph, min_size::Integer)
-    empty!(result)
-    for n in each_node_id(sg)
-        nd = node(sg, n)
-        if is_deleted(nd) || length(nd) > min_size
-            continue
-        end
-        fwl = forward_links(sg, n)
-        bwl = backward_links(sg, n)
-        if length(fwl) == 1 && length(bwl) == 0
-            if length(backward_links(sg, destination(first(fwl)))) > 1
-                push!(result, n)
-            end
-        end
-        if length(fwl) == 0 && length(bwl) == 1
-            if length(forward_links(sg, -destination(first(bwl)))) > 1
-                push!(result, n)
-            end
-        end
-        if isempty(fwl) && isempty(bwl)
-            push!(result, n)
-        end
-    end
-    return result
-end
 
-function find_tip_nodes(sg::SequenceDistanceGraph, min_size::Integer)
-    return find_tip_nodes!(Set{NodeID}(), sg, min_size)
-end
 
 function find_all_unitigs!(unitigs::Vector{SequenceGraphPath{G}},
     sg::G, min_nodes::Integer) where {G<:SequenceDistanceGraph}
