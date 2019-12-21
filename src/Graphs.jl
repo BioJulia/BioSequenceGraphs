@@ -170,8 +170,13 @@ const SDGLink = SequenceDistanceGraphLink
 
 SequenceDistanceGraphLink(src::NodeID, dst::NodeID) = SequenceDistanceGraphLink(src, dst, 0)
 
+"Get the source node end of a link."
 source(l::SequenceDistanceGraphLink) = l.source
+
+"Get the destination node end of a link."
 destination(l::SequenceDistanceGraphLink) = l.destination
+
+"Get the distance between two node ends involved in a link."
 distance(l::SequenceDistanceGraphLink) = l.dist
 
 function Base.:(==)(x::SequenceDistanceGraphLink, y::SequenceDistanceGraphLink)
@@ -180,6 +185,8 @@ end
 
 "Test if link `l` is a forward link leaving node `n`."
 is_forwards_from(l::SequenceDistanceGraphLink, n::NodeID) = source(l) == -n
+
+"Test if link `l` is a forward link leaving node `n`."
 is_backwards_from(l::SequenceDistanceGraphLink, n::NodeID) = source(l) == n
 
 
@@ -498,6 +505,24 @@ function disconnect_node!(sg::SequenceDistanceGraph, n::NodeID)
     end
 end
 
+"""
+    collapse_all_unitigs!(sg::SequenceDistanceGraph, min_nodes::Integer, consume::Bool)
+
+Detects all of the trivial paths through the graph that define unitigs. Such
+paths are defined as a chain of nodes with only one neighbour. Each such simple
+paths through the graph can safely be collapsed into one larger node, which is
+what this function does.
+
+!!! note
+    This method will edit `unitigs` so as after this method returns it contains
+    All the paths that were detected as unitigs in the graph.
+    This method also edits the `newnodes` vector, so as after this method returns
+    it contains the IDs of all new nodes that were created as a result of
+    collapsing the paths in `unitigs`.
+
+!!! note
+    Modifies the SequenceDistanceGraph `sg`.
+"""
 function collapse_all_unitigs!(unitigs::Vector{SequenceGraphPath{G}},
                                newnodes::Vector{NodeID},
                                sg::G,
@@ -511,13 +536,22 @@ function collapse_all_unitigs!(unitigs::Vector{SequenceGraphPath{G}},
     end
 end
 
+"""
+    collapse_all_unitigs!(sg::SequenceDistanceGraph, min_nodes::Integer, consume::Bool)
+
+Detects all of the trivial paths through the graph that define unitigs. Such
+paths are defined as a chain of nodes with only one neighbour. Each such simple
+paths through the graph can safely be collapsed into one larger node, which is
+what this function does.
+
+!!! note
+    Modifies the SequenceDistanceGraph `sg`.
+"""
 function collapse_all_unitigs!(sg::SequenceDistanceGraph, min_nodes::Integer, consume::Bool)
     unitigs = Vector{SequenceGraphPath{typeof(sg)}}()
     newnodes = Vector{NodeID}()
     return collapse_all_unitigs!(unitigs, newnodes, sg, min_nodes, consume)
 end
-
-
 
 
 ## Public / safe

@@ -1,4 +1,29 @@
-# API: Graph submodule
+```@meta
+CurrentModule = GenomeGraphs.Graphs
+```
+
+# API: The Graphs submodule
+
+The Graphs submodule contains the core graph data-structure used in
+GenomeGraphs.jl: The SequenceDistanceGraph.
+
+It also defines some of the common methods used in the rest of the higher-level
+parts GenomeGraphs.jl:
+
+- To query nodes/sequences in the graph.
+- To find certain topological structures.
+- To edit graph structure.
+- To write/load SequenceDistanceGraph's to/from file.
+
+Some methods, particularly ones that access the sequences stored in the graph,
+and to edit topology, are marked as unsafe and are not exported deliberately.
+
+All types and methods defined in this module are documented here.
+
+!!! note
+    This is a reference of an internal sub-module's API for developers and
+    experienced users. First ask yourself if what you need isn't covered by
+    the higher-level WorkSpace API. 
 
 ## Types
 
@@ -6,7 +31,7 @@
 SequenceDistanceGraph
 SDG
 SDGNode
-DistanceGraphLink
+SequenceDistanceGraphLink
 ```
 
 ## Public / Safe methods
@@ -41,8 +66,8 @@ find_all_unitigs!
 ### Graph IO
 
 ```@docs
-write_to_gfa1
-load_from_gfa1!
+Graphs.write_to_gfa1
+Graphs.load_from_gfa1!
 ```
 
 ## Internal / Unsafe methods
@@ -52,7 +77,7 @@ load_from_gfa1!
 ```@docs
 Graphs.empty_seq
 Graphs.is_deleted
-Graphs.sequence_unsafe
+Graphs.unsafe_sequence
 Graphs.check_node_id
 Graphs.nodes
 Graphs.node_unsafe
@@ -63,7 +88,7 @@ Graphs.node
 
 ```@docs
 Graphs.links
-Graphs.links_unsafe
+Graphs.linksof_unsafe
 ```
 
 ### Graph editing and manipulation

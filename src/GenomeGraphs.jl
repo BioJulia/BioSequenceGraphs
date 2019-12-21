@@ -63,14 +63,13 @@ export
     dbg!,
     remove_tips!
 
+include("Graphs.jl")
+
 using BioSequences, FASTX, ReadDatastores
 import BioSequences.EveryMerIterator
 
 include("mertools/MerFreq.jl")
 include("mertools/counting.jl")
-
-include("Graphs.jl")
-
 
 include("indexes/unique-kmers.jl")
 
