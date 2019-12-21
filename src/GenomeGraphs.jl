@@ -30,37 +30,6 @@ export
     BigDNAMer,
     BigDNAKmer,
     
-
-    ###
-    ### Sequence Distance Graph
-    ###
-    DistanceGraphLink,
-    SequenceDistanceGraph,
-    SDG,
-    
-    # Nodes and sequences
-    name,
-    n_nodes,
-    sequence,
-    each_node_id,
-    
-    # Graph topology
-    find_link,
-    forward_links,
-    backward_links,
-    get_next_nodes,
-    get_previous_nodes,
-    find_tip_nodes,
-    find_tip_nodes!,
-    
-    
-    
-    get_all_unitigs,
-    
-    # IO
-    load_from_gfa1!,
-    write_to_gfa1,
-    
     ###
     ### MerFreq
     ###
@@ -100,7 +69,8 @@ import BioSequences.EveryMerIterator
 include("mertools/MerFreq.jl")
 include("mertools/counting.jl")
 
-include("graph/SequenceDistanceGraph.jl")
+include("Graphs.jl")
+
 
 include("indexes/unique-kmers.jl")
 
