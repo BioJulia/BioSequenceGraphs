@@ -12,7 +12,7 @@ makedocs(
         ],
         "API" => [
             "Graphs submodule" => "api/Graphs.md",
-            "MerTools submodule" => "api/MerTools"
+            "MerTools submodule" => "api/MerTools.md"
         ]
     ],
     
