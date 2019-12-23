@@ -26,7 +26,7 @@ function build_freq_list(::Type{M}, sbuf::SequenceBuffer{PairedReads}, range::Un
         end
     end
     resize!(chunk_mers, wi - 1)
-    return collapse_into_freqs(chunk_mers)
+    return MerTools.collapse_into_counts(chunk_mers)
 end
 
 """
@@ -50,9 +50,9 @@ allocate a buffer to collect all the kmers in the dataset all in one go.
 """
 function build_freq_list(::Type{M}, sbuf::SequenceBuffer{PairedReads}, range::UnitRange{Int}, chunk_size::Int) where {M<:AbstractMer}
     chunk_mers = Vector{M}(undef, chunk_size)
-    chunk_freqs = Vector{MerFreq{M}}()
+    chunk_freqs = Vector{MerCount{M}}()
     sizehint!(chunk_freqs, chunk_size)
-    output = Vector{MerFreq{M}}()
+    output = Vector{MerCount{M}}()
     
     read = first(range)
     lastread = last(range)
@@ -76,14 +76,14 @@ function build_freq_list(::Type{M}, sbuf::SequenceBuffer{PairedReads}, range::Un
                 mernext = iterate(mergen)
             else # There are no more reads to come.
                 resize!(chunk_mers, chunkfill - 1)
-                collapse_into_freqs!(chunk_mers, chunk_freqs)
-                merge_into_sorted!(output, chunk_freqs)
+                MerTools.collapse_into_freqs!(chunk_mers, chunk_freqs)
+                MerTools.merge_into_sorted!(output, chunk_freqs)
                 return output
             end
         end
         if chunkfill > chunk_size # The buffer is full, time to merge into output.
-            collapse_into_freqs!(chunk_mers, chunk_freqs)
-            merge_into_sorted!(output, chunk_freqs)
+            MerTools.collapse_into_freqs!(chunk_mers, chunk_freqs)
+            MerTools.merge_into_sorted!(output, chunk_freqs)
             chunkfill = 1
         end
     end

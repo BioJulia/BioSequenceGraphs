@@ -5,7 +5,7 @@ function remove_tips!(ws::WorkSpace, min_size::Integer)
     pass = 1
     tips = Graphs.find_tip_nodes(sdg, min_size)
     ntips = length(tips)
-    utgs = Vector{Graphs.SequenceGraphPath{typeof(sdg)}}()
+    utgs = Vector{Graphs.SequenceDistanceGraphPath{typeof(sdg)}}()
     newnodes = Vector{Graphs.NodeID}()
     while true
         @info string("Pass number: ", pass)
