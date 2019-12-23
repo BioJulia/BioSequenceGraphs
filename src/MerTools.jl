@@ -222,6 +222,10 @@ collapse!(freqs::Vector{MerCount{M}}) where {M<:AbstractMer} = collapse_sorted!(
 ### Mer count histogram (kmer spectra) type.
 ###
 
+"""
+A type for storing a frequency histogram of MerCounts, also sometimes referred
+to as a Kmer spectra. 
+"""
 struct MerCountHist
     data::Vector{UInt64}
     min::UInt8
