@@ -11,7 +11,8 @@ makedocs(
             "Guide" => "man/guide.md"
         ],
         "API" => [
-            "Graphs submodule" => "api/Graphs.md"
+            "Graphs submodule" => "api/Graphs.md",
+            "MerTools submodule" => "api/MerTools"
         ]
     ],
     
