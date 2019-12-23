@@ -5,7 +5,7 @@ export
     MerCount,
     DNAMerCount,
     RNAMerCount,
-    MerCountHist
+    MerCountHist,
     mer,
     freq,
     hist,
