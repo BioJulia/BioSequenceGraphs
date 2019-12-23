@@ -1,4 +1,4 @@
-using Documenter, GenomeGraphs
+using Documenter, GenomeGraphs, Pkg
 
 makedocs(
     modules = [GenomeGraphs, GenomeGraphs.Graphs, GenomeGraphs.MerTools],
