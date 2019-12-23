@@ -1,7 +1,7 @@
 using Documenter, GenomeGraphs
 
 makedocs(
-    modules = [GenomeGraphs, GenomeGraphs.Graphs],
+    modules = [GenomeGraphs, GenomeGraphs.Graphs, GenomeGraphs.MerTools],
     format = Documenter.HTML(),
     sitename = "GenomeGraphs.jl",
     authors = "Ben J. Ward & Arda Akdemir",
