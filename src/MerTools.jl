@@ -105,7 +105,7 @@ vector that is cleared and filled with the result.
 """
 function collapse_into_counts!(result::Vector{MerCount{M}}, mers::Vector{M}) where {M<:AbstractMer}
     sort!(mers)
-    return unsafe_collapse_into_counts!(mers, result)
+    return unsafe_collapse_into_counts!(result, mers)
 end
 
 """
