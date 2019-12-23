@@ -4,7 +4,7 @@ makedocs(
     modules = [GenomeGraphs, GenomeGraphs.Graphs, GenomeGraphs.MerTools],
     format = Documenter.HTML(),
     sitename = "GenomeGraphs.jl",
-    authors = "Ben J. Ward & Arda Akdemir",
+    authors = replace(join(Pkg.TOML.parsefile("Project.toml")["authors"], ", "), r" <.*?>" => "" )
     pages = [
         "Home" => "index.md",
         "Manual" => [
@@ -19,6 +19,7 @@ makedocs(
 
 deploydocs(
     repo = "github.com/BioJulia/GenomeGraphs.jl.git",
+    push_preview = true,
     deps = nothing,
     make = nothing
 )
