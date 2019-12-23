@@ -4,7 +4,7 @@ makedocs(
     modules = [GenomeGraphs, GenomeGraphs.Graphs, GenomeGraphs.MerTools],
     format = Documenter.HTML(),
     sitename = "GenomeGraphs.jl",
-    authors = replace(join(Pkg.TOML.parsefile("Project.toml")["authors"], ", "), r" <.*?>" => "" )
+    authors = replace(join(Pkg.TOML.parsefile("Project.toml")["authors"], ", "), r" <.*?>" => "" ),
     pages = [
         "Home" => "index.md",
         "Manual" => [
