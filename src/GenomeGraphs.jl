@@ -64,13 +64,10 @@ export
     remove_tips!
 
 include("MerTools.jl")   # MerTools submodule.
-include("Graphs.jl")              # Graphs submodule.
+include("Graphs.jl")     # Graphs submodule.
 
 using BioSequences, FASTX, ReadDatastores
 import BioSequences.EveryMerIterator
-
-#include("mertools/MerFreq.jl")
-include("mertools/counting.jl")
 
 include("indexes/unique-kmers.jl")
 
