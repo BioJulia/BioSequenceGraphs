@@ -288,7 +288,7 @@ end
 Build a sorted list (vector) of kmer counts (MerFreq), serially and in memory.
 
 This function is a serial and in memory `MerFreq` list builder that can build a
-kmer count from a PairedReads datastore on it own (if you have memory and time),
+kmer count from a PairedReads datastore on its own (if you have memory and time),
 but it is also intended to be composed into other multi-process or multi-threaded
 kmer counting strategies.
 

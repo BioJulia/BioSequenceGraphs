@@ -28,6 +28,7 @@ freq
 collapse_into_counts
 collapse_into_counts!
 merge_into!
+build_freq_list
 ```
 
 ## Internal / Unsafe methods
