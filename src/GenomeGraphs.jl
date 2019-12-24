@@ -31,20 +31,6 @@ export
     BigDNAKmer,
     
     ###
-    ### MerFreq
-    ###
-    #collapse_sorted!,
-    #collapse!,
-    #collapse_into_freqs!,
-    #collapse_into_freqs,
-    #collapse_into_freqs_sorted!,
-    #collapse_into_freqs_sorted,
-    #merge_into!,
-    #merge_into_sorted!,
-    #hist,
-    #hist!,
-    
-    ###
     ### MerCounts
     ###
     MerCounts,
