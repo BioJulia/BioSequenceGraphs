@@ -1,3 +1,16 @@
+module GraphIndexes
+
+export
+    GraphStrandPosition,
+    UniqueMerIndex
+
+
+
+
+
+
+
+
 struct GraphStrandPosition
     node::Graphs.NodeID
     position::UInt32
@@ -82,3 +95,5 @@ function UniqueMerIndex{M}(graph::S) where {S<:Graphs.SequenceDistanceGraph,M<:A
     
     return UniqueMerIndex{M}(mer_to_graphposition, unique_mers_per_node, total_mers_per_node)
 end
+
+end # module
