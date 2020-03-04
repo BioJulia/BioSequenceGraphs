@@ -297,8 +297,8 @@ specified by `range` in the dataset. It then pre-allocates an array to contain
 them. It then collects the kmers, sorts, them, and then collapses them into a
 list of counts sorted by the kmer.
 """
-function build_freq_list(::Type{M}, sbuf::DatastoreBuffer{PairedReads}, range::UnitRange{Int}) where {M<:AbstractMer}
-    max_read_size = maxseqlen(ReadDatastores.datastore(sbuf))
+function build_freq_list(::Type{M}, sbuf::DatastoreBuffer{<:PairedReads}, range::UnitRange{Int}) where {M<:AbstractMer}
+    max_read_size = max_read_length(ReadDatastores.datastore(sbuf))
     chunk_mers = Vector{M}(undef, length(range) * (max_read_size - ksize(M) + 1))
     wi = firstindex(chunk_mers)
     read_sequence = eltype(sbuf)()
