@@ -7,7 +7,7 @@ export
     ### Re-exports of GenomeGraphs framework sub-components.
     ###
     
-    # ReadDatastores
+    # Re-exports of ReadDatastores
     ReadDatastore,
     PairedReads,
     LongReads,
@@ -15,11 +15,11 @@ export
     buffer,
     FwRv,
     
-    # FASTX
+    # Re-exports of FASTX
     FASTA,
     FASTQ,
     
-    # BioSequences
+    # Re-exports of BioSequences
     DNAAlphabet,
     BioSequence,
     LongSequence,
@@ -34,7 +34,7 @@ export
     ###
     ### MerCounts
     ###
-    MerCounts,
+    #MerCounts, # Moved to KmerAnalysis.jl
     
     ### WorkSpace
     WorkSpace,
@@ -50,14 +50,12 @@ export
     dbg!,
     remove_tips!
 
-include("MerTools.jl")     # Submodule with tools for working with and counting kmers.
 include("Graphs.jl")       # Submodule defining the key Graph type and basic methods.
 include("GraphIndexes.jl") # Submodule defining types that allow indexing of a graph.
 
-using BioSequences, FASTX, ReadDatastores
+using BioSequences, FASTX, ReadDatastores, KmerAnalysis
 import BioSequences.EveryMerIterator
 
-include("datastores/kmer-counts.jl")
 include("workspace/WorkSpace.jl")
 include("views/NodeView.jl")
 
