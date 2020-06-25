@@ -30,7 +30,8 @@ the master branch to try new features before release.
 
 ## Testing
 
-GenomeGraphs is tested against Julia `1.X` on Linux, OS X, and Windows.
+GenomeGraphs is tested on Linux, OS X, and Windows, for the stable, LTS, and
+nightly builds of julia.
 
 **Latest build status:**
 

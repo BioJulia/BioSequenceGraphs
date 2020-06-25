@@ -19,7 +19,9 @@ export
     FASTA,
     FASTQ,
     
-    # Re-exports of BioSequences
+    ###
+    ### Re-exports of BioSequences.jl
+    ###
     DNAAlphabet,
     BioSequence,
     LongSequence,
@@ -32,17 +34,25 @@ export
     BigDNAKmer,
     
     ###
-    ### MerCounts
+    ### Re-exports of KmerAnalysis.jl
     ###
-    #MerCounts, # Moved to KmerAnalysis.jl
+    Canonical,
+    NonCanonical,
+    CANONICAL,
+    NONCANONICAL,
+    # Kmer counters
+    serial_mem,
+    dist_mem,
+    
+    GRAPH_TYPE,
     
     ### WorkSpace
-    WorkSpace,
-    add_paired_reads!,
-    paired_reads,
-    add_mer_counts!,
-    mer_counts,
-    
+    #WorkSpace,
+    #add_paired_reads!,
+    #paired_reads,
+    #add_mer_counts!,
+    #mer_counts,
+    read_datastore,
     ###
     ### Processes
     ###
@@ -50,15 +60,27 @@ export
     dbg!,
     remove_tips!
 
-include("Graphs.jl")       # Submodule defining the key Graph type and basic methods.
-include("GraphIndexes.jl") # Submodule defining types that allow indexing of a graph.
-
 using BioSequences, FASTX, ReadDatastores, KmerAnalysis
 import BioSequences.EveryMerIterator
 
-include("workspace/WorkSpace.jl")
-include("views/NodeView.jl")
+include("Graphs.jl")       # Submodule defining the key Graph type and basic methods.
+include("GraphIndexes.jl") # Submodule defining types that allow indexing of a graph.
 
-include("processes/dbg.jl")
-include("processes/remove_tips.jl")
+
+
+#include("workspace/WorkSpace.jl")
+#include("views/NodeView.jl")
+
+# Utility function for more quickly making a read datastore.
+function read_datastore(R1file::String, R2file::String, name::String, minlen::Int, maxlen::Int, insertlen::Int, mode::PairedReadOrientation)
+    fwq = open(FASTQ.Reader, R1file)
+    rvq = open(FASTQ.Reader, R2file)
+    return PairedReads{DNAAlphabet{4}}(fwq, rvq, name, name, minlen, maxlen, insertlen, mode)
+end
+
+
+
+include("dbg.jl")
+include("remove_tips.jl")
+
 end # module GenomeGraphs
