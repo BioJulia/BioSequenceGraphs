@@ -22,6 +22,8 @@ if anything - about how well your assembly satisfies those three hallmarks.
 
 Ideally at the end of the process the genome assembly would
 have a single complete sequence for every unique haplotype in the genome.
+This does not happen for most genome assemblies, but fear not, genome assemblies
+are perfectly useful for most applications even if they are not 100% resolved.
 
 This guide will take you from raw data to a genome assembly using the GenomeGraphs
 framework.
@@ -119,7 +121,7 @@ RAM. It takes ~30 seconds for my MacBook pro to run this example.
 
 ```julia
 # Create a serial_mem counter.
-sm = serial_mem(DNAKmer{31}, CANONICAL)
+sm = serial_mem(DNAMer{31}, CANONICAL)
 # Use counter to count kmers in the paired read datastore.
 kmers = sm(ds)
 ```
@@ -144,7 +146,9 @@ Ok now we have a variable called `kmers` that stores the kmer counts from the
 read dataset. For every unique canonical kmer in the dataset, there is an entry
 listing that kmer and its count in the full read dataset.
 
-### Check and filter the kmer counts
+### Check frequency spectra
+
+
 
 ### Use the `dbg` function on the kmers
 

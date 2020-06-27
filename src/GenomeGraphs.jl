@@ -43,6 +43,7 @@ export
     # Kmer counters
     serial_mem,
     dist_mem,
+    spectra,
     
     GRAPH_TYPE,
     
