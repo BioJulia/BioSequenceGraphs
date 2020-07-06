@@ -246,14 +246,6 @@ end
 =#
 
 #=
-function dbg!(sg::GRAPH_TYPE, counted_kmers::Vector{<:MerCount}, min_freq::Integer)
-    filter!(x -> freq(x) ≥ min_freq, counted_kmers)
-    merlist = [mer(x) for x in counted_kmers]
-    dbg!(sg, merlist)
-end
-=#
-
-#=
 function dbg!(graph::GRAPH_TYPE, kmerlist::Vector{M}) where {M<:AbstractMer}
     str = string("onstructing compressed de-bruijn graph from ", length(kmerlist), ' ', BioSequences.ksize(M), "-mers")
     @info string('C', str)
@@ -271,31 +263,19 @@ function dbg!(sdg::GRAPH_TYPE, kmers)
         throw(ArgumentError("Didn't provide a collection of kmers for the `kmers` parameter did ya?"))
     end
     @info dbg_message(kmers)
-    build_unitigs!(sdg, kmerlist)
+    build_unitigs!(sdg, kmers)
     if Graphs.n_nodes(sdg) > 1
-        connect_unitigs_by_overlaps!(sdg, eltype(M))
+        connect_unitigs_by_overlaps!(sdg, eltype(kmers))
     end
     @info "Done"
     return sdg
 end
 
-"""
-    dbg(kmers)
-
-Construct a compressed de Bruijn graph from some input kmers.
-
-A non-mutating version of [dbg!](@ref) which first constructs an empty
-[SequenceDistanceGraph](@ref) for you.
-"""
-function dbg(kmers)
-    sdg = GRAPH_TYPE()
-    return dbg!(sdg, kmers)
+function dbg!(sg::GRAPH_TYPE, counted_kmers::Vector{<:MerCount}, min_freq::Integer)
+    filter!(x -> freq(x) ≥ min_freq, counted_kmers)
+    merlist = [mer(x) for x in counted_kmers]
+    dbg!(sg, merlist)
 end
-
-
-
-
-
 
 @inline function dbg_message(x::Vector{M}) where {M<:AbstractMer}
     return string("Constructing a compressed de-bruijn graph from ", length(x), ' ', BioSequences.ksize(M), "-mers")

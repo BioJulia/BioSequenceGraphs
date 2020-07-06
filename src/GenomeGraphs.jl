@@ -36,6 +36,8 @@ export
     ###
     ### Re-exports of KmerAnalysis.jl
     ###
+    mer,
+    freq,
     Canonical,
     NonCanonical,
     CANONICAL,
@@ -45,7 +47,8 @@ export
     dist_mem,
     spectra,
     
-    GRAPH_TYPE,
+    empty_graph,
+    #GRAPH_TYPE,
     
     ### WorkSpace
     #WorkSpace,
@@ -79,7 +82,7 @@ function read_datastore(R1file::String, R2file::String, name::String, minlen::In
     return PairedReads{DNAAlphabet{4}}(fwq, rvq, name, name, minlen, maxlen, insertlen, mode)
 end
 
-
+empty_graph(::Type{T}) where {T<:LongSequence} = Graphs.SequenceDistanceGraph{T}()
 
 include("dbg.jl")
 include("remove_tips.jl")

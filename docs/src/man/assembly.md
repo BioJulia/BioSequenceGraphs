@@ -65,6 +65,8 @@ This can be achieved with a few simple steps:
 3. Check and filter the kmers.
 4. Use the `dbg` function on the kmers.
 
+Let's walk through this process with some _E. coli_ paired end read data.
+
 ### Preparing the sequencing reads
 
 The first thing we are going to do is prepare a datastore for some paired-end
@@ -75,7 +77,7 @@ Anyway, let's see how to build a paired end reads datastore!
 ```julia
 using GenomeGraphs
 
-ds = read_datastore("ecoli_pe_R1.fastq", "ecoli_pe_R2.fastq", "ecoli-pe", 250, 301, 0, FwRv)
+ds = read_datastore("test/ecoli_pe_R1.fastq", "test/ecoli_pe_R2.fastq", "ecoli-pe", 250, 301, 0, FwRv)
 ```
 
 Here "ecoli-pe" is provided as the base filename of the datastore file that will
@@ -123,7 +125,7 @@ RAM. It takes ~30 seconds for my MacBook pro to run this example.
 # Create a serial_mem counter.
 sm = serial_mem(DNAMer{31}, CANONICAL)
 # Use counter to count kmers in the paired read datastore.
-kmers = sm(ds)
+read_kcounts = sm(ds)
 ```
 
 !!! note
@@ -139,16 +141,67 @@ kmers = sm(ds)
     import KmerAnalysis
     # Create the counter.
     sm = serial_mem(DNAMer{31}, CANONICAL)
-    kmers = KmerAnalysis.count!(sm, ds)
+    read_kcounts = KmerAnalysis.count!(sm, ds)
     ```
 
 Ok now we have a variable called `kmers` that stores the kmer counts from the
 read dataset. For every unique canonical kmer in the dataset, there is an entry
 listing that kmer and its count in the full read dataset.
 
-### Check frequency spectra
+### Check the Kmer Frequency Spectra
 
+Now we have counted the canonical kmers in the read dataset we need to have a
+look at the kmer frequency spectra and check that we have a decent separation of
+the distributions corresponding to actual genome content, and the distribution
+that corresponds to sequencing error.
 
+```julia
+speccy = spectra(kmers)
+```
+
+Graphics and visualisation are currently not built into GenomeGraphs, because
+julia has a few different plotting frameworks and we don't want to force a user
+into using one vs the other, and they are also very heavy dependencies.
+
+However, some Makie.jl based visualisation of kmer frequency spectra is provided
+by KmerAnalysisMakie.jl, which is a Makie companion to the KmerAnalysis.jl package.
+
+```julia
+using Makie, KmerAnalysisMakie
+
+plot(speccy)
+
+limits = FRect(0, 0, 100, 500_000)
+plot(speccy, limits = limits)
+```
+
+Ok we can clearly see a nice separation between two distributions.
+The distribution that shoots off the plot where y = 1, represents all the many
+kmers in the read dataset that appear only once in the dataset. These kmers
+are likely the result of sequencing error - assuming the errors the sequencer
+makes are sufficiently random, and infrequent (which for Illumina Pair End
+sequencing, is the case).
+
+The second distribution, centred around `40 < x < 50` is the main sampling
+distribution of the genuine motifs that exist in genome. It is centred on an x
+axis value approximate to the sequencing depth chosen for the sequencing experiment.
+This central value makes sense. Say, you chose to conduct a sequence experiment
+such that the genome should have been covered by the sequencer 50 times, you'd
+expect genuine kmers that exist in the genome to have been observed ~50 times.
+Some kmers will be covered more times, perhaps because they are parts of motifs
+that are common or repeat across the genome. Some motifs don't appear as frequently
+because of sources of error during DNA sample prep, or are parts of the genome
+a sequencer finds hard to cover, because of the specifics of how the machines and
+or their chemistry work. Hence, we get a distribution around a central value close
+to the expected genome coverage.
+
+We want don't want to include kmers that constitute the error distribution, in 
+our genome assembly, so we will filter to get rid of them. From the plot
+you can see any x value cutoff of 10 would be fine. 
+
+```julia
+filt_kmers = [mer(x) for x in read_kcounts if freq(x) ≥ 10]
+```
 
 ### Use the `dbg` function on the kmers
 
@@ -159,10 +212,22 @@ of "stages" - internal methods that can be easily overloaded for custom types,
 with sensible fallback defaults that hopefully don't destroy performance. 
 
 ```julia
-graph = dbg(kmers)
+graph = empty_graph(LongSequence{DNAAlphabet{4}})
+dbg!(graph, filt_kmers, 10)
 ```
 
 Ok, this is one of the more meatier steps of the process.
+
+### Check the Kmer Frequency Spectra again
+
+```julia
+graph_kcount = sm([x.seq for x in graph.nodes])
+sect = spectra(reads_kcount, graph_kcount)
+
+spectracn(sect)
+```
+
+
 
 
 
